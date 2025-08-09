@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Prisma Studio usage instructions
 - Documented seeding process
 - Added SQL schema documentation
+- Documented new modular monolith architecture in README.md
 
 ### Development Tools
 - Added TypeScript configuration for both client and server
@@ -57,5 +58,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Prisma
     - CORS
     - dotenv
+
+### Refactor & Architecture
+- Refactored server codebase to modular monolith architecture:
+  - Moved all business logic and request handlers into `src/modules` by domain (profile, lesson, submission)
+  - Each module contains its own `service.ts`, `handler.ts`, and `types.ts`
+  - Updated all routes to use new handlers from modules
+  - Created module index files for clean imports
+- Deleted legacy `controllers` and `services` directories
+- Separated all request/response/result models into dedicated `types.ts` files per module
+- Improved type safety and maintainability
 
 [Unreleased]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/master...HEAD

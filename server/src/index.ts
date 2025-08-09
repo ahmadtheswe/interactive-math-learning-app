@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { profileRoutes } from "./routes/profileRoutes";
+import { lessonRoutes } from "./routes/lessonRoutes";
 
 dotenv.config();
 
@@ -15,6 +17,12 @@ app.use(express.json());
 app.get("/api", (_req, res) => {
   res.json({ message: "Hello from PERN + TypeScript backend!" });
 });
+
+// Profile routes
+app.use("/api/profile", profileRoutes);
+
+// Lesson routes
+app.use("/api/lessons", lessonRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

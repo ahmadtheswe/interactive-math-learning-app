@@ -1,5 +1,4 @@
 import { PrismaClient } from '../generated/prisma/client';
-import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 

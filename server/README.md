@@ -83,7 +83,68 @@ The seed will create:
 
 Note: You can modify the seed data in `prisma/seeds.ts` to add or change the initial data.
 
-## Database Schema
+## Architecture
+
+The server follows a modular monolith architecture pattern, organizing code by business domains rather than technical layers.
+
+### Project Structure
+
+```
+src/
+├── modules/                 # Business domain modules
+│   ├── profile/
+│   │   ├── service.ts      # ProfileService - business logic
+│   │   ├── handler.ts      # ProfileHandler - HTTP request handling
+│   │   └── index.ts        # Module exports
+│   ├── lesson/
+│   │   ├── service.ts      # LessonService - business logic
+│   │   ├── handler.ts      # LessonHandler - HTTP request handling
+│   │   └── index.ts        # Module exports
+│   ├── submission/
+│   │   ├── service.ts      # SubmissionService - business logic
+│   │   ├── handler.ts      # SubmissionHandler - HTTP request handling
+│   │   └── index.ts        # Module exports
+│   └── index.ts            # Main modules export
+├── routes/
+│   ├── profileRoutes.ts    # Profile API routes
+│   └── lessonRoutes.ts     # Lesson & submission API routes
+├── generated/              # Prisma generated client
+│   └── prisma/
+└── index.ts                # Main application entry point
+```
+
+### Architecture Principles
+
+1. **Domain-Driven Design**: Each module represents a business domain
+2. **Separation of Concerns**: Services handle business logic, handlers manage HTTP concerns
+3. **Modular Organization**: Related functionality is grouped together
+4. **Clean Imports**: Index files provide clean module exports
+5. **Scalability**: New modules can be added without affecting existing ones
+
+### API Endpoints
+
+#### Profile Module
+- `GET /api/profile` - Get user profile stats
+- `GET /api/profile/:userId` - Get specific user profile stats
+- `GET /api/profile/user/:userId` - Get full user profile
+
+#### Lesson Module
+- `GET /api/lessons` - Get lessons with completion/progress status
+- `GET /api/lessons/:lessonId` - Get specific lesson with problems
+- `PUT /api/lessons/:lessonId/progress` - Update user progress
+
+#### Submission Module
+- `POST /api/lessons/:id/submit` - Submit answers with XP and streak calculation
+
+### Key Features
+
+- **XP System**: Each correct answer awards XP based on problem difficulty
+- **Streak Tracking**: Daily streak system with UTC-based calculations
+- **Idempotent Submissions**: Using attempt_id to prevent duplicate XP awards
+- **Progress Tracking**: Real-time lesson completion and progress percentages
+- **Type Safety**: Full TypeScript integration with Prisma-generated types
+
+### Database Schema
 
 The database schema has been updated to include the following models:
 - **User**: Represents a user in the system.
