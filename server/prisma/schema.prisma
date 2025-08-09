@@ -18,87 +18,87 @@ model User {
   id               Int       @id @default(autoincrement())
   name             String
   email            String?   @unique
-  totalXp          Int       @default(0)
-  currentStreak    Int       @default(0)
-  bestStreak       Int       @default(0)
-  lastActivityDate DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  totalXp          Int       @default(0) @map("total_xp")
+  currentStreak    Int       @default(0) @map("current_streak")
+  bestStreak       Int       @default(0) @map("best_streak")
+  lastActivityDate DateTime? @map("last_activity_date")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   submissions Submission[]
   progresses  UserProgress[]
 
-  @@map("user")
+  @@map("users")
 }
 
 model Lesson {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
-  orderIndex  Int      @default(0)
-  createdAt   DateTime @default(now())
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   problems    Problem[]
   submissions Submission[]
   progresses  UserProgress[]
 
-  @@map("lesson")
+  @@map("lessons")
 }
 
 model Problem {
   id            Int    @id @default(autoincrement())
-  lessonId      Int
+  lessonId      Int    @map("lesson_id")
   type          String
   question      String
-  correctAnswer String
-  xpValue       Int    @default(10)
-  orderIndex    Int    @default(0)
+  correctAnswer String @map("correct_answer")
+  xpValue       Int    @default(10) @map("xp_value")
+  orderIndex    Int    @default(0) @map("order_index")
 
   lesson      Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   options     ProblemOption[]
   submissions Submission[]
 
-  @@map("problem")
+  @@map("problems")
 }
 
 model ProblemOption {
   id         Int     @id @default(autoincrement())
-  problemId  Int
-  optionText String
-  isCorrect  Boolean @default(false)
+  problemId  Int     @map("problem_id")
+  optionText String  @map("option_text")
+  isCorrect  Boolean @default(false) @map("is_correct")
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
-  @@map("problem_option")
+  @@map("problem_options")
 }
 
 model Submission {
   id         Int      @id @default(autoincrement())
-  attemptId  String   @unique
-  userId     Int
-  lessonId   Int
-  problemId  Int
-  userAnswer String
-  isCorrect  Boolean
-  xpAwarded  Int      @default(0)
-  createdAt  DateTime @default(now())
+  attemptId  String   @unique @map("attempt_id")
+  userId     Int      @map("user_id")
+  lessonId   Int      @map("lesson_id")
+  problemId  Int      @map("problem_id")
+  userAnswer String   @map("user_answer")
+  isCorrect  Boolean  @map("is_correct")
+  xpAwarded  Int      @default(0) @map("xp_awarded")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
-  @@map("submission")
+  @@map("submissions")
 }
 
 model UserProgress {
   id                Int       @id @default(autoincrement())
-  userId            Int
-  lessonId          Int
-  problemsCompleted Int       @default(0)
-  totalProblems     Int       @default(0)
-  progressPercent   Decimal   @default(0.00) @db.Decimal(5, 2)
+  userId            Int       @map("user_id")
+  lessonId          Int       @map("lesson_id")
+  problemsCompleted Int       @default(0) @map("problems_completed")
+  totalProblems     Int       @default(0) @map("total_problems")
+  progressPercent   Decimal   @default(0.00) @db.Decimal(5, 2) @map("progress_percent")
   completed         Boolean   @default(false)
-  lastAttemptAt     DateTime?
+  lastAttemptAt     DateTime? @map("last_attempt_at")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)

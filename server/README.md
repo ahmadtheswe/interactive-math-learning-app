@@ -1,6 +1,36 @@
-## Prisma Migration
+## P### Initial Setup and Migration
 
-This migration updates the database schema to reflect the latest changes in the Prisma models. It includes:
+1. Generate the migration files:
+  ```bash
+  npx prisma migrate dev --name init
+  ```
+  This creates a new migration based on your schema changes.
+
+2. Apply the migration to the database:
+  ```bash
+  npx prisma migrate deploy
+  ```
+  This applies pending migrations to your database.
+
+3. Generate Prisma Client:
+  ```bash
+  npx prisma generate
+  ```
+  This command is crucial as it:
+  - Generates the Prisma Client based on your schema
+  - Creates TypeScript types for your models
+  - Must be run after any changes to `schema.prisma`
+  - Must be run before running seeds or starting the server
+  - Creates the `@prisma/client` package in your `node_modules`
+
+  If you see errors about missing `PrismaClient`, run this command to fix them.
+
+Note: Make sure your database is running before executing these commands.gration
+
+This section covers how to set up your database using Prisma. Make sure your database is running before executing these commands.
+
+### Initial Setup and Migration
+
 1. Generate the migration files:
   ```bash
   npx prisma migrate dev --name init
@@ -16,7 +46,42 @@ This migration updates the database schema to reflect the latest changes in the 
   npx prisma generate
   ```
 
-Note: Make sure your database is running before executing these commands.
+### Prisma Studio
+
+To interact with your database using a GUI:
+
+```bash
+npx prisma studio
+```
+
+Prisma Studio provides:
+- Visual interface to view and edit data
+- Table relationships visualization
+- Easy CRUD operations
+- Data filtering and sorting
+- Real-time updates
+- Access at `http://localhost:5555` by default
+
+### Database Seeding
+
+To populate your database with initial test data:
+
+1. First ensure you have compiled the TypeScript seed file:
+  ```bash
+  npx tsc prisma/seeds.ts --outDir dist
+  ```
+
+2. Run the seed command:
+  ```bash
+  npx prisma db seed
+  ```
+
+The seed will create:
+- Two initial lessons: "Basic Arithmetic" and "Introduction to Algebra"
+- Multiple problems for each lesson with various types (multiple choice and input)
+- Problem options for multiple choice questions
+
+Note: You can modify the seed data in `prisma/seeds.ts` to add or change the initial data.
 
 ## Database Schema
 
