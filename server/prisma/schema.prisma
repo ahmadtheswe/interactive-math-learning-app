@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  name             String
+  email            String?   @unique
+  totalXp          Int       @default(0)
+  currentStreak    Int       @default(0)
+  bestStreak       Int       @default(0)
+  lastActivityDate DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  submissions Submission[]
+  progresses  UserProgress[]
+
+  @@map("user")
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  problems    Problem[]
+  submissions Submission[]
+  progresses  UserProgress[]
+
+  @@map("lesson")
+}
+
+model Problem {
+  id            Int    @id @default(autoincrement())
+  lessonId      Int
+  type          String
+  question      String
+  correctAnswer String
+  xpValue       Int    @default(10)
+  orderIndex    Int    @default(0)
+
+  lesson      Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  options     ProblemOption[]
+  submissions Submission[]
+
+  @@map("problem")
+}
+
+model ProblemOption {
+  id         Int     @id @default(autoincrement())
+  problemId  Int
+  optionText String
+  isCorrect  Boolean @default(false)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("problem_option")
+}
+
+model Submission {
+  id         Int      @id @default(autoincrement())
+  attemptId  String   @unique
+  userId     Int
+  lessonId   Int
+  problemId  Int
+  userAnswer String
+  isCorrect  Boolean
+  xpAwarded  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("submission")
+}
+
+model UserProgress {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  lessonId          Int
+  problemsCompleted Int       @default(0)
+  totalProblems     Int       @default(0)
+  progressPercent   Decimal   @default(0.00) @db.Decimal(5, 2)
+  completed         Boolean   @default(false)
+  lastAttemptAt     DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+
+  @@map("user_progress")
+}

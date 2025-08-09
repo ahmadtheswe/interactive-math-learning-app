@@ -49,11 +49,6 @@ lerna-debug.log*
 # Optional eslint cache
 .eslintcache
 
-# PostgreSQL data
-*.dump
-*.sql
-*.sqlite
-
 # System files
 Thumbs.db
 desktop.ini
