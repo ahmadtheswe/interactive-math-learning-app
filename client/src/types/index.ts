@@ -70,3 +70,16 @@ export interface SubmissionRequest {
   attemptId: string;
   answers: SubmissionAnswer[];
 }
+
+export interface SubmissionResult {
+  correctAnswers: number;
+  totalAnswers: number;
+  totalXpAwarded: number;
+  streakCount?: number;
+  isNewStreak?: boolean;
+  streakBonusXp?: number;
+  previousXp?: number;
+  newXp?: number;
+  improvements?: string[];
+  results?: any; // For backward compatibility
+}

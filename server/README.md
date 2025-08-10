@@ -1,29 +1,36 @@
 ## P### Initial Setup and Migration
 
 1. Generate the migration files:
-  ```bash
-  npx prisma migrate dev --name init
-  ```
-  This creates a new migration based on your schema changes.
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This creates a new migration based on your schema changes.
 
 2. Apply the migration to the database:
-  ```bash
-  npx prisma migrate deploy
-  ```
-  This applies pending migrations to your database.
+
+```bash
+npx prisma migrate deploy
+```
+
+This applies pending migrations to your database.
 
 3. Generate Prisma Client:
-  ```bash
-  npx prisma generate
-  ```
-  This command is crucial as it:
-  - Generates the Prisma Client based on your schema
-  - Creates TypeScript types for your models
-  - Must be run after any changes to `schema.prisma`
-  - Must be run before running seeds or starting the server
-  - Creates the `@prisma/client` package in your `node_modules`
 
-  If you see errors about missing `PrismaClient`, run this command to fix them.
+```bash
+npx prisma generate
+```
+
+This command is crucial as it:
+
+- Generates the Prisma Client based on your schema
+- Creates TypeScript types for your models
+- Must be run after any changes to `schema.prisma`
+- Must be run before running seeds or starting the server
+- Creates the `@prisma/client` package in your `node_modules`
+
+If you see errors about missing `PrismaClient`, run this command to fix them.
 
 Note: Make sure your database is running before executing these commands.gration
 
@@ -32,19 +39,22 @@ This section covers how to set up your database using Prisma. Make sure your dat
 ### Initial Setup and Migration
 
 1. Generate the migration files:
-  ```bash
-  npx prisma migrate dev --name init
-  ```
+
+```bash
+npx prisma migrate dev --name init
+```
 
 2. Apply the migration to the database:
-  ```bash
-  npx prisma migrate deploy
-  ```
+
+```bash
+npx prisma migrate deploy
+```
 
 3. Generate Prisma Client:
-  ```bash
-  npx prisma generate
-  ```
+
+```bash
+npx prisma generate
+```
 
 ### Prisma Studio
 
@@ -55,6 +65,7 @@ npx prisma studio
 ```
 
 Prisma Studio provides:
+
 - Visual interface to view and edit data
 - Table relationships visualization
 - Easy CRUD operations
@@ -66,22 +77,93 @@ Prisma Studio provides:
 
 To populate your database with initial test data:
 
-1. First ensure you have compiled the TypeScript seed file:
-  ```bash
-  npx tsc prisma/seeds.ts --outDir dist
-  ```
-
-2. Run the seed command:
-  ```bash
-  npx prisma db seed
-  ```
+```bash
+npm run seed
+```
 
 The seed will create:
-- Two initial lessons: "Basic Arithmetic" and "Introduction to Algebra"
+
+- Three users with clean stats (0 XP, 0 streaks)
+- Five comprehensive lessons covering different math topics:
+  - Basic Arithmetic (addition, subtraction)
+  - Multiplication Mastery (times tables)
+  - Division Basics (simple division)
+  - Fractions Fun (basic fractions)
+  - Algebra Basics (intro to algebra)
 - Multiple problems for each lesson with various types (multiple choice and input)
 - Problem options for multiple choice questions
+- **Clean state**: No submissions or user progress (users start fresh)
 
-Note: You can modify the seed data in `prisma/seeds.ts` to add or change the initial data.
+### Database Management Scripts
+
+The following npm scripts are available for database management:
+
+```bash
+# Reset database (clear all data but keep users with reset stats)
+npm run db:reset
+
+# Seed database with fresh data
+npm run seed
+
+# Reset and reseed in one command
+npm run db:fresh
+```
+
+### Database Reset
+
+To clean your database and start fresh:
+
+```bash
+npm run db:reset
+```
+
+This will:
+
+- Clear all submissions (empty submissions table)
+- Clear all user progress (empty user_progress table)
+- Clear all problems and options
+- Clear all lessons
+- Reset all user stats (totalXp: 0, currentStreak: 0, bestStreak: 0)
+- Keep users but reset their activity data
+
+### Fresh Start
+
+For a complete fresh start:
+
+```bash
+npm run db:fresh
+```
+
+This combines reset + seed to give you a clean database with fresh lesson data and users starting from zero.
+
+## Development Workflow
+
+### Quick Start
+
+1. **Set up database**: Ensure PostgreSQL is running
+2. **Install dependencies**: `npm install`
+3. **Apply migrations**: `npx prisma migrate dev`
+4. **Generate Prisma client**: `npx prisma generate`
+5. **Seed database**: `npm run seed`
+6. **Start development server**: `npm run dev`
+
+### Daily Development
+
+- **Start server**: `npm run dev` (auto-restarts on changes)
+- **View database**: `npx prisma studio`
+- **Reset when needed**: `npm run db:fresh`
+- **Debug with VS Code**: Use "Debug Server (ts-node)" configuration
+
+### Available Scripts
+
+```bash
+npm run dev        # Start development server with hot reload
+npm run build      # Compile TypeScript to JavaScript
+npm run start      # Run compiled server
+npm run seed       # Populate database with test data
+npm run db:reset   # Clear database and reset user stats
+npm run db:fresh   # Reset + seed (complete refresh)
+```
 
 ## Architecture
 
@@ -124,29 +206,69 @@ src/
 ### API Endpoints
 
 #### Profile Module
+
 - `GET /api/profile` - Get user profile stats
 - `GET /api/profile/:userId` - Get specific user profile stats
 - `GET /api/profile/user/:userId` - Get full user profile
 
 #### Lesson Module
+
 - `GET /api/lessons` - Get lessons with completion/progress status
 - `GET /api/lessons/:lessonId` - Get specific lesson with problems
 - `PUT /api/lessons/:lessonId/progress` - Update user progress
 
 #### Submission Module
+
 - `POST /api/lessons/:id/submit` - Submit answers with XP and streak calculation
 
 ### Key Features
 
 - **XP System**: Each correct answer awards XP based on problem difficulty
 - **Streak Tracking**: Daily streak system with UTC-based calculations
-- **Idempotent Submissions**: Using attempt_id to prevent duplicate XP awards
+- **Idempotent Submissions**: Using attempt_id + problem_id composite key to prevent duplicate submissions
 - **Progress Tracking**: Real-time lesson completion and progress percentages
 - **Type Safety**: Full TypeScript integration with Prisma-generated types
+- **Clean Start**: Users begin with zero stats for authentic progression
+- **Comprehensive Seeding**: Five lesson categories covering various math topics
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **PrismaClient Import Errors**
+
+   ```bash
+   npx prisma generate
+   ```
+
+   Run this after any schema changes.
+
+2. **Submission Unique Constraint Errors**  
+   This was fixed by changing from single `attempt_id` constraint to composite `(attempt_id, problem_id)` constraint.
+
+3. **Database Connection Issues**
+
+   - Ensure PostgreSQL is running on port 5400
+   - Check `.env` file has correct `DATABASE_URL`
+   - Verify database exists and is accessible
+
+4. **Seeding Errors**
+
+   ```bash
+   npm run db:fresh
+   ```
+
+   This resets and reseeds everything.
+
+5. **VS Code Debug Issues**
+   - Use the provided `.vscode/launch.json` configurations
+   - Try "Debug Server (ts-node)" for development
+   - Ensure `.env` file exists before debugging
 
 ### Database Schema
 
 The database schema has been updated to include the following models:
+
 - **User**: Represents a user in the system.
 - **Lesson**: Represents a lesson containing multiple problems.
 - **Problem**: Represents a problem within a lesson, which can have multiple options.
@@ -215,7 +337,7 @@ CREATE INDEX idx_problem_options_problem ON problem_options(problem_id);
 -- ==============================
 CREATE TABLE submissions (
     id SERIAL PRIMARY KEY,
-    attempt_id UUID NOT NULL UNIQUE,
+    attempt_id VARCHAR(255) NOT NULL, -- Removed UNIQUE constraint
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     lesson_id INT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
     problem_id INT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
@@ -225,7 +347,9 @@ CREATE TABLE submissions (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_submissions_attempt_id ON submissions(attempt_id);
+-- Composite unique constraint: one submission per problem per attempt
+CREATE UNIQUE INDEX idx_submissions_attempt_problem
+ON submissions(attempt_id, problem_id);
 
 -- ==============================
 -- 6. USER PROGRESS

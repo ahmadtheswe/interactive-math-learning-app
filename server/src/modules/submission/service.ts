@@ -1,46 +1,57 @@
-import { PrismaClient } from '../../../generated/prisma';
-import { SubmissionRequest, SubmissionResult, SubmissionData, StreakCalculation } from './types';
-import { SubmissionMapper } from './mapper';
+import { PrismaClient } from "../../../generated/prisma";
+import {
+  SubmissionRequest,
+  SubmissionResult,
+  SubmissionData,
+  StreakCalculation,
+} from "./types";
+import { SubmissionMapper } from "./mapper";
 
 const prisma = new PrismaClient();
 
 export class SubmissionService {
-  static async submitAnswers(userId: number, lessonId: number, submission: SubmissionRequest): Promise<SubmissionResult> {
+  static async submitAnswers(
+    userId: number,
+    lessonId: number,
+    submission: SubmissionRequest
+  ): Promise<SubmissionResult> {
     try {
       // Check if this attempt_id already exists (idempotency)
-      const existingSubmission = await prisma.submission.findFirst({
+      const existingSubmissions = await prisma.submission.findMany({
         where: { attemptId: submission.attemptId },
         include: {
           user: true,
           lesson: {
             include: {
               problems: {
-                select: { id: true }
-              }
-            }
-          }
-        }
+                select: { id: true },
+              },
+            },
+          },
+        },
       });
 
-      // If submission already exists, return the previous result
-      if (existingSubmission) {
+      // If submissions already exist for this attempt, return the previous result
+      if (existingSubmissions.length > 0) {
         const userProgress = await prisma.userProgress.findUnique({
           where: {
             userId_lessonId: {
               userId,
-              lessonId
-            }
-          }
+              lessonId,
+            },
+          },
         });
 
-        const correctAnswersCount = await this.getCorrectAnswersCount(submission.attemptId);
-        
+        const correctAnswersCount = existingSubmissions.filter(
+          (s) => s.isCorrect
+        ).length;
+
         // Use mapper for resubmission result
         return SubmissionMapper.toResubmissionResult(
           submission.attemptId,
           correctAnswersCount,
           submission.answers.length,
-          existingSubmission,
+          existingSubmissions[0], // Use first submission for user/lesson data
           userProgress
         );
       }
@@ -56,25 +67,25 @@ export class SubmissionService {
                   id: true,
                   problemId: true,
                   optionText: true,
-                  isCorrect: true
-                }
-              }
-            }
-          }
-        }
+                  isCorrect: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!lesson) {
-        throw new Error('Lesson not found');
+        throw new Error("Lesson not found");
       }
 
       // Get current user data
       const user = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Process each answer
@@ -83,11 +94,14 @@ export class SubmissionService {
       const submissionData: SubmissionData[] = [];
 
       for (const answer of submission.answers) {
-        const problem = lesson.problems.find(p => p.id === answer.problemId);
+        const problem = lesson.problems.find((p) => p.id === answer.problemId);
         if (!problem) continue;
 
         // Use mapper to validate answer
-        const isCorrect = SubmissionMapper.validateAnswer(problem, answer.answer);
+        const isCorrect = SubmissionMapper.validateAnswer(
+          problem,
+          answer.answer
+        );
 
         if (isCorrect) {
           correctAnswers++;
@@ -119,7 +133,7 @@ export class SubmissionService {
           currentStreak: newStreak,
           bestStreak: Math.max(bestStreak, newStreak),
           lastActivityDate: new Date(),
-        }
+        },
       });
 
       // Save all submissions in a transaction
@@ -131,22 +145,28 @@ export class SubmissionService {
 
       // Update lesson progress using mapper calculations
       const totalProblems = lesson.problems.length;
-      const progressPercent = SubmissionMapper.calculateProgressPercent(correctAnswers, totalProblems);
-      const completed = SubmissionMapper.isLessonCompleted(correctAnswers, totalProblems);
+      const progressPercent = SubmissionMapper.calculateProgressPercent(
+        correctAnswers,
+        totalProblems
+      );
+      const completed = SubmissionMapper.isLessonCompleted(
+        correctAnswers,
+        totalProblems
+      );
 
       const userProgress = await prisma.userProgress.upsert({
         where: {
           userId_lessonId: {
             userId,
-            lessonId
-          }
+            lessonId,
+          },
         },
         update: {
           problemsCompleted: correctAnswers,
           totalProblems,
           progressPercent,
           completed,
-          lastAttemptAt: new Date()
+          lastAttemptAt: new Date(),
         },
         create: {
           userId,
@@ -155,8 +175,8 @@ export class SubmissionService {
           totalProblems,
           progressPercent,
           completed,
-          lastAttemptAt: new Date()
-        }
+          lastAttemptAt: new Date(),
+        },
       });
 
       // Use mapper to create final result
@@ -168,25 +188,29 @@ export class SubmissionService {
         updatedUser,
         userProgress
       );
-
     } catch (error) {
-      console.error('Error submitting answers:', error);
-      throw new Error('Failed to submit answers');
+      console.error("Error submitting answers:", error);
+      throw new Error("Failed to submit answers");
     }
   }
 
-  private static async calculateStreak(userId: number, user: {
-    currentStreak: number;
-    bestStreak: number;
-    lastActivityDate: Date | null;
-  }): Promise<StreakCalculation> {
+  private static async calculateStreak(
+    userId: number,
+    user: {
+      currentStreak: number;
+      bestStreak: number;
+      lastActivityDate: Date | null;
+    }
+  ): Promise<StreakCalculation> {
     // Delegate to mapper
     return SubmissionMapper.calculateStreak(user);
   }
 
-  private static async getCorrectAnswersCount(attemptId: string): Promise<number> {
+  private static async getCorrectAnswersCount(
+    attemptId: string
+  ): Promise<number> {
     const submissions = await prisma.submission.findMany({
-      where: { attemptId, isCorrect: true }
+      where: { attemptId, isCorrect: true },
     });
     return submissions.length;
   }

@@ -84,6 +84,26 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
       if (response.success) {
         setResults(response.data);
         setSubmitted(true);
+        
+        // Navigate to results page with comprehensive data
+        const resultsData = {
+          correctAnswers: response.data.correctAnswers || 0,
+          totalAnswers: response.data.totalAnswers || lesson.problems.length,
+          totalXpAwarded: response.data.totalXpAwarded || 0,
+          streakCount: response.data.streakCount || 0,
+          isNewStreak: response.data.isNewStreak || false,
+          streakBonusXp: response.data.streakBonusXp || 0,
+          previousXp: response.data.previousXp || 0,
+          newXp: response.data.newXp || 0,
+          lessonTitle: lesson.title,
+          perfectScore: (response.data.correctAnswers || 0) === lesson.problems.length,
+          improvements: response.data.improvements || []
+        };
+
+        // Small delay for better UX, then navigate to results
+        setTimeout(() => {
+          navigate('/results', { state: { resultsData } });
+        }, 1500);
       }
     } catch (err) {
       console.error('Failed to submit answers:', err);
@@ -237,38 +257,18 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
           </div>
         )}
 
-        {/* Results */}
+        {/* Results - Success Message */}
         {submitted && results && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Results</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{results.correctAnswers || 0}</p>
-                <p className="text-sm text-gray-600">Correct</p>
+          <div className="mt-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-sm border border-green-200 p-6">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🎉</div>
+              <h3 className="text-xl font-bold text-green-800 mb-2">Lesson Completed!</h3>
+              <p className="text-green-700 mb-4">
+                Great job! You scored {results.correctAnswers || 0} out of {results.totalAnswers || 0} problems correctly.
+              </p>
+              <div className="animate-pulse">
+                <p className="text-sm text-green-600">Preparing your results...</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">{(results.totalAnswers || 0) - (results.correctAnswers || 0)}</p>
-                <p className="text-sm text-gray-600">Incorrect</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{results.totalXpAwarded || 0}</p>
-                <p className="text-sm text-gray-600">XP Earned</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-purple-600">
-                  {Math.round(((results.correctAnswers || 0) / (results.totalAnswers || 1)) * 100)}%
-                </p>
-                <p className="text-sm text-gray-600">Score</p>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={handleBackClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-              >
-                Continue Learning
-              </button>
             </div>
           </div>
         )}

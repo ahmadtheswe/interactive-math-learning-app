@@ -74,7 +74,7 @@ model ProblemOption {
 
 model Submission {
   id         Int      @id @default(autoincrement())
-  attemptId  String   @unique @map("attempt_id")
+  attemptId  String   @map("attempt_id")
   userId     Int      @map("user_id")
   lessonId   Int      @map("lesson_id")
   problemId  Int      @map("problem_id")
@@ -86,6 +86,9 @@ model Submission {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  // Ensure one submission per problem per attempt
+  @@unique([attemptId, problemId])
 
   @@map("submissions")
 }
