@@ -1,36 +1,40 @@
 import { Request, Response } from 'express';
-import { SubmissionService, SubmissionRequest } from './service';
+import { SubmissionService } from './service';
+import { SubmissionRequest } from './types';
 
 export class SubmissionHandler {
-  static async submitAnswers(req: Request, res: Response) {
+  static async submitAnswers(req: Request, res: Response): Promise<void> {
     try {
       const lessonId = parseInt(req.params.id);
       const userIdHeader = req.headers['userid'] || req.headers['x-user-id'] || '1';
       const userId = parseInt(userIdHeader as string);
 
       if (isNaN(lessonId) || isNaN(userId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid lesson ID or user ID'
         });
+        return;
       }
 
       const { attemptId, answers }: SubmissionRequest = req.body;
 
       if (!attemptId || !answers || !Array.isArray(answers)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Missing required fields: attemptId and answers array'
         });
+        return;
       }
 
       // Validate answers format
       for (const answer of answers) {
         if (!answer.problemId || typeof answer.answer !== 'string') {
-          return res.status(400).json({
+          res.status(400).json({
             success: false,
             error: 'Invalid answer format. Each answer must have problemId and answer fields'
           });
+          return;
         }
       }
 

@@ -21,6 +21,30 @@ export interface UserProfile {
   createdAt: Date;
 }
 
+// Database query result types
+export interface ProfileUserFromDatabase {
+  totalXp: number;
+  currentStreak: number;
+  bestStreak: number;
+  lastActivityDate: Date | null;
+}
+
+export interface UserProfileFromDatabase {
+  id: number;
+  name: string;
+  email: string | null;
+  totalXp: number;
+  currentStreak: number;
+  bestStreak: number;
+  lastActivityDate: Date | null;
+  createdAt: Date;
+}
+
+export interface ProfileUserProgressFromDatabase {
+  completed: boolean;
+  progressPercent: number | { toNumber(): number };
+}
+
 // API Response Types
 export interface ProfileStatsResponse {
   success: true;

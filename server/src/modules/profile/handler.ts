@@ -2,26 +2,28 @@ import { Request, Response } from 'express';
 import { ProfileService } from './service';
 
 export class ProfileHandler {
-  static async getProfile(req: Request, res: Response) {
+  static async getProfile(req: Request, res: Response): Promise<void> {
     try {
       // For now, we'll use a hardcoded user ID. 
       // In a real app, you'd get this from authentication middleware
       const userId = req.params.userId ? parseInt(req.params.userId) : 1;
 
       if (isNaN(userId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid user ID'
         });
+        return;
       }
 
       const userStats = await ProfileService.getUserStats(userId);
 
       if (!userStats) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'User not found'
         });
+        return;
       }
 
       res.json({
@@ -45,24 +47,26 @@ export class ProfileHandler {
     }
   }
 
-  static async getUserProfile(req: Request, res: Response) {
+  static async getUserProfile(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.params.userId ? parseInt(req.params.userId) : 1;
 
       if (isNaN(userId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid user ID'
         });
+        return;
       }
 
       const user = await ProfileService.getUserById(userId);
 
       if (!user) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'User not found'
         });
+        return;
       }
 
       res.json({

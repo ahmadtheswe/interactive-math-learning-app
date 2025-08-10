@@ -1,33 +1,8 @@
 import { PrismaClient } from '../../../generated/prisma';
+import { SubmissionRequest, SubmissionResult, SubmissionData, StreakCalculation } from './types';
+import { SubmissionMapper } from './mapper';
 
 const prisma = new PrismaClient();
-
-export interface SubmissionRequest {
-  attemptId: string;
-  answers: Array<{
-    problemId: number;
-    answer: string;
-  }>;
-}
-
-export interface SubmissionResult {
-  attemptId: string;
-  totalXpAwarded: number;
-  correctAnswers: number;
-  totalAnswers: number;
-  user: {
-    totalXp: number;
-    currentStreak: number;
-    bestStreak: number;
-  };
-  progress: {
-    problemsCompleted: number;
-    totalProblems: number;
-    progressPercent: number;
-    completed: boolean;
-  };
-  isResubmission: boolean;
-}
 
 export class SubmissionService {
   static async submitAnswers(userId: number, lessonId: number, submission: SubmissionRequest): Promise<SubmissionResult> {
@@ -58,24 +33,16 @@ export class SubmissionService {
           }
         });
 
-        return {
-          attemptId: submission.attemptId,
-          totalXpAwarded: 0, // No XP awarded on resubmission
-          correctAnswers: await this.getCorrectAnswersCount(submission.attemptId),
-          totalAnswers: submission.answers.length,
-          user: {
-            totalXp: existingSubmission.user.totalXp,
-            currentStreak: existingSubmission.user.currentStreak,
-            bestStreak: existingSubmission.user.bestStreak,
-          },
-          progress: {
-            problemsCompleted: userProgress?.problemsCompleted || 0,
-            totalProblems: userProgress?.totalProblems || existingSubmission.lesson.problems.length,
-            progressPercent: userProgress ? Number(userProgress.progressPercent) : 0,
-            completed: userProgress?.completed || false,
-          },
-          isResubmission: true
-        };
+        const correctAnswersCount = await this.getCorrectAnswersCount(submission.attemptId);
+        
+        // Use mapper for resubmission result
+        return SubmissionMapper.toResubmissionResult(
+          submission.attemptId,
+          correctAnswersCount,
+          submission.answers.length,
+          existingSubmission,
+          userProgress
+        );
       }
 
       // Get lesson with problems and correct answers
@@ -113,50 +80,36 @@ export class SubmissionService {
       // Process each answer
       let correctAnswers = 0;
       let totalXpAwarded = 0;
-      const submissionData: Array<{
-        attemptId: string;
-        userId: number;
-        lessonId: number;
-        problemId: number;
-        userAnswer: string;
-        isCorrect: boolean;
-        xpAwarded: number;
-      }> = [];
+      const submissionData: SubmissionData[] = [];
 
       for (const answer of submission.answers) {
         const problem = lesson.problems.find(p => p.id === answer.problemId);
         if (!problem) continue;
 
-        let isCorrect = false;
-
-        // Check if answer is correct based on problem type
-        if (problem.type === 'multiple_choice') {
-          // For multiple choice, check if the selected option is correct
-          const selectedOption = problem.options.find(opt => opt.optionText === answer.answer);
-          isCorrect = selectedOption?.isCorrect || false;
-        } else if (problem.type === 'input') {
-          // For input type, compare directly with correct answer
-          isCorrect = answer.answer.trim().toLowerCase() === problem.correctAnswer.trim().toLowerCase();
-        }
+        // Use mapper to validate answer
+        const isCorrect = SubmissionMapper.validateAnswer(problem, answer.answer);
 
         if (isCorrect) {
           correctAnswers++;
           totalXpAwarded += problem.xpValue;
         }
 
-        submissionData.push({
-          attemptId: submission.attemptId,
-          userId,
-          lessonId,
-          problemId: problem.id,
-          userAnswer: answer.answer,
-          isCorrect,
-          xpAwarded: isCorrect ? problem.xpValue : 0,
-        });
+        // Use mapper to create submission data
+        submissionData.push(
+          SubmissionMapper.toSubmissionData(
+            submission.attemptId,
+            userId,
+            lessonId,
+            problem.id,
+            answer.answer,
+            isCorrect,
+            isCorrect ? problem.xpValue : 0
+          )
+        );
       }
 
-      // Calculate new streak
-      const { newStreak, bestStreak } = await this.calculateStreak(userId, user);
+      // Use mapper to calculate new streak
+      const { newStreak, bestStreak } = SubmissionMapper.calculateStreak(user);
 
       // Update user stats
       const updatedUser = await prisma.user.update({
@@ -176,10 +129,10 @@ export class SubmissionService {
         }
       });
 
-      // Update lesson progress
+      // Update lesson progress using mapper calculations
       const totalProblems = lesson.problems.length;
-      const progressPercent = totalProblems > 0 ? Math.round((correctAnswers / totalProblems) * 100) : 0;
-      const completed = correctAnswers >= totalProblems;
+      const progressPercent = SubmissionMapper.calculateProgressPercent(correctAnswers, totalProblems);
+      const completed = SubmissionMapper.isLessonCompleted(correctAnswers, totalProblems);
 
       const userProgress = await prisma.userProgress.upsert({
         where: {
@@ -206,24 +159,15 @@ export class SubmissionService {
         }
       });
 
-      return {
-        attemptId: submission.attemptId,
+      // Use mapper to create final result
+      return SubmissionMapper.toSubmissionResult(
+        submission.attemptId,
         totalXpAwarded,
         correctAnswers,
-        totalAnswers: submission.answers.length,
-        user: {
-          totalXp: updatedUser.totalXp,
-          currentStreak: updatedUser.currentStreak,
-          bestStreak: updatedUser.bestStreak,
-        },
-        progress: {
-          problemsCompleted: userProgress.problemsCompleted,
-          totalProblems: userProgress.totalProblems,
-          progressPercent: Number(userProgress.progressPercent),
-          completed: userProgress.completed,
-        },
-        isResubmission: false
-      };
+        submission.answers.length,
+        updatedUser,
+        userProgress
+      );
 
     } catch (error) {
       console.error('Error submitting answers:', error);
@@ -231,39 +175,13 @@ export class SubmissionService {
     }
   }
 
-  private static async calculateStreak(userId: number, user: any) {
-    const today = new Date();
-    const todayUTC = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-    
-    let newStreak = user.currentStreak;
-    let bestStreak = user.bestStreak;
-
-    if (!user.lastActivityDate) {
-      // First time user - start streak at 1
-      newStreak = 1;
-    } else {
-      const lastActivityUTC = new Date(user.lastActivityDate);
-      const lastActivityDateUTC = new Date(
-        lastActivityUTC.getUTCFullYear(), 
-        lastActivityUTC.getUTCMonth(), 
-        lastActivityUTC.getUTCDate()
-      );
-
-      const daysDifference = Math.floor((todayUTC.getTime() - lastActivityDateUTC.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysDifference === 0) {
-        // Same day - no streak change
-        newStreak = user.currentStreak;
-      } else if (daysDifference === 1) {
-        // Next day - increment streak
-        newStreak = user.currentStreak + 1;
-      } else {
-        // Missed a day - reset streak
-        newStreak = 1;
-      }
-    }
-
-    return { newStreak, bestStreak };
+  private static async calculateStreak(userId: number, user: {
+    currentStreak: number;
+    bestStreak: number;
+    lastActivityDate: Date | null;
+  }): Promise<StreakCalculation> {
+    // Delegate to mapper
+    return SubmissionMapper.calculateStreak(user);
   }
 
   private static async getCorrectAnswersCount(attemptId: string): Promise<number> {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '../../../generated/prisma';
 import { UserProfileStats, UserProfile } from './types';
+import { ProfileMapper } from './mapper';
 
 const prisma = new PrismaClient();
 
@@ -33,28 +34,8 @@ export class ProfileService {
       // Get total lessons count
       const totalLessons = await prisma.lesson.count();
 
-      // Calculate statistics
-      const completedLessons = userProgresses.filter((progress: any) => progress.completed).length;
-      
-      // Calculate overall progress percentage
-      let overallProgressPercentage = 0;
-      if (userProgresses.length > 0) {
-        const totalProgress = userProgresses.reduce(
-          (sum: number, progress: any) => sum + Number(progress.progressPercent), 
-          0
-        );
-        overallProgressPercentage = Math.round(totalProgress / userProgresses.length);
-      }
-
-      return {
-        totalXp: user.totalXp,
-        currentStreak: user.currentStreak,
-        bestStreak: user.bestStreak,
-        progressPercentage: overallProgressPercentage,
-        completedLessons,
-        totalLessons,
-        lastActivityDate: user.lastActivityDate,
-      };
+      // Use mapper to transform data
+      return ProfileMapper.toUserProfileStats(user, userProgresses, totalLessons);
     } catch (error) {
       console.error('Error fetching user stats:', error);
       throw new Error('Failed to fetch user statistics');
@@ -63,7 +44,7 @@ export class ProfileService {
 
   static async getUserById(userId: number): Promise<UserProfile | null> {
     try {
-      return await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
           id: true,
@@ -76,6 +57,8 @@ export class ProfileService {
           createdAt: true,
         },
       });
+
+      return user ? ProfileMapper.toUserProfile(user) : null;
     } catch (error) {
       console.error('Error fetching user:', error);
       throw new Error('Failed to fetch user');

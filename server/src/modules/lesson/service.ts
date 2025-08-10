@@ -1,19 +1,8 @@
 import { PrismaClient } from '../../../generated/prisma';
+import { LessonWithProgress, LessonWithDetails, UserProgressUpdateResult } from './types';
+import { LessonMapper } from './mapper';
 
 const prisma = new PrismaClient();
-
-export interface LessonWithProgress {
-  id: number;
-  title: string;
-  description: string | null;
-  orderIndex: number;
-  createdAt: Date;
-  totalProblems: number;
-  completedProblems: number;
-  progressPercent: number;
-  completed: boolean;
-  lastAttemptAt: Date | null;
-}
 
 export class LessonService {
   static async getLessonsWithProgress(userId: number): Promise<LessonWithProgress[]> {
@@ -38,33 +27,15 @@ export class LessonService {
         }
       });
 
-      // Transform the data to include progress information
-      const lessonsWithProgress: LessonWithProgress[] = lessons.map(lesson => {
-        const userProgress = lesson.progresses[0]; // Should be only one per user
-        const totalProblems = lesson.problems.length;
-
-        return {
-          id: lesson.id,
-          title: lesson.title,
-          description: lesson.description,
-          orderIndex: lesson.orderIndex,
-          createdAt: lesson.createdAt,
-          totalProblems,
-          completedProblems: userProgress?.problemsCompleted || 0,
-          progressPercent: userProgress ? Number(userProgress.progressPercent) : 0,
-          completed: userProgress?.completed || false,
-          lastAttemptAt: userProgress?.lastAttemptAt || null,
-        };
-      });
-
-      return lessonsWithProgress;
+      // Use mapper to transform the data
+      return LessonMapper.toLessonsWithProgress(lessons);
     } catch (error) {
       console.error('Error fetching lessons with progress:', error);
       throw new Error('Failed to fetch lessons with progress');
     }
   }
 
-  static async getLessonById(lessonId: number, userId: number) {
+  static async getLessonById(lessonId: number, userId: number): Promise<LessonWithDetails | null> {
     try {
       const lesson = await prisma.lesson.findUnique({
         where: { id: lessonId },
@@ -98,25 +69,15 @@ export class LessonService {
         return null;
       }
 
-      const userProgress = lesson.progresses[0];
-
-      return {
-        ...lesson,
-        userProgress: userProgress || {
-          problemsCompleted: 0,
-          totalProblems: lesson.problems.length,
-          progressPercent: 0,
-          completed: false,
-          lastAttemptAt: null,
-        }
-      };
+      // Use mapper to transform the data
+      return LessonMapper.toLessonWithDetails(lesson);
     } catch (error) {
       console.error('Error fetching lesson by ID:', error);
       throw new Error('Failed to fetch lesson');
     }
   }
 
-  static async updateUserProgress(userId: number, lessonId: number, problemsCompleted: number) {
+  static async updateUserProgress(userId: number, lessonId: number, problemsCompleted: number): Promise<UserProgressUpdateResult> {
     try {
       // Get total problems in the lesson
       const lesson = await prisma.lesson.findUnique({
@@ -133,8 +94,8 @@ export class LessonService {
       }
 
       const totalProblems = lesson.problems.length;
-      const progressPercent = totalProblems > 0 ? Math.round((problemsCompleted / totalProblems) * 100) : 0;
-      const completed = problemsCompleted >= totalProblems;
+      const progressPercent = LessonMapper.calculateProgressPercent(problemsCompleted, totalProblems);
+      const completed = LessonMapper.isLessonCompleted(problemsCompleted, totalProblems);
 
       // Upsert user progress
       const userProgress = await prisma.userProgress.upsert({
