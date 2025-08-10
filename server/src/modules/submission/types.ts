@@ -31,6 +31,9 @@ export interface SubmissionResult {
   user: UserStats;
   progress: ProgressStats;
   isResubmission: boolean;
+  streakBonusXp?: number;
+  previousXp?: number;
+  isNewStreak?: boolean;
 }
 
 export interface SubmissionResults {

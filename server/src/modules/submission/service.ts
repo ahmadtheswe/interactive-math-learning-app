@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../generated/prisma";
+import { prisma } from "../../db";
 import {
   SubmissionRequest,
   SubmissionResult,
@@ -6,8 +6,6 @@ import {
   StreakCalculation,
 } from "./types";
 import { SubmissionMapper } from "./mapper";
-
-const prisma = new PrismaClient();
 
 export class SubmissionService {
   static async submitAnswers(
@@ -125,18 +123,26 @@ export class SubmissionService {
       // Use mapper to calculate new streak
       const { newStreak, bestStreak } = SubmissionMapper.calculateStreak(user);
 
+      // Calculate streak bonus (e.g., 10% bonus for streaks > 3 days)
+      const streakBonusXp =
+        newStreak > 3 ? Math.floor(totalXpAwarded * 0.1) : 0;
+      const finalXpAwarded = totalXpAwarded + streakBonusXp;
+
+      // Store previous XP for results display
+      const previousXp = user.totalXp;
+
       // Update user stats
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
-          totalXp: user.totalXp + totalXpAwarded,
+          totalXp: user.totalXp + finalXpAwarded,
           currentStreak: newStreak,
           bestStreak: Math.max(bestStreak, newStreak),
           lastActivityDate: new Date(),
         },
       });
 
-      // Save all submissions in a transaction
+      // Save all submissions in a transaction (using global timeout settings)
       await prisma.$transaction(async (tx) => {
         for (const subData of submissionData) {
           await tx.submission.create({ data: subData });
@@ -186,7 +192,10 @@ export class SubmissionService {
         correctAnswers,
         submission.answers.length,
         updatedUser,
-        userProgress
+        userProgress,
+        streakBonusXp,
+        previousXp,
+        newStreak === 1 || (user.currentStreak === 0 && newStreak > 0) // isNewStreak
       );
     } catch (error) {
       console.error("Error submitting answers:", error);

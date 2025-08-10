@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { LessonWithDetails, SubmissionAnswer } from '../types';
-import { api } from '../services/api';
-import ProblemCard from './ProblemCard';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import type { LessonWithDetails, SubmissionAnswer } from "../types";
+import { api } from "../services/api";
+import ProblemCard from "./ProblemCard";
 
 interface LessonInterfaceProps {
   lessonId: number;
   onBackToLessons?: () => void; // Made optional for backward compatibility
 }
 
-export default function LessonInterface({ lessonId, onBackToLessons }: LessonInterfaceProps) {
+export default function LessonInterface({
+  lessonId,
+  onBackToLessons,
+}: LessonInterfaceProps) {
   const navigate = useNavigate();
   const [lesson, setLesson] = useState<LessonWithDetails | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -33,22 +36,22 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
         // Initialize empty answers for all problems
         const initialAnswers: Record<number, string> = {};
         response.data.problems.forEach((problem: any) => {
-          initialAnswers[problem.id] = '';
+          initialAnswers[problem.id] = "";
         });
         setAnswers(initialAnswers);
       }
     } catch (err) {
-      console.error('Failed to fetch lesson:', err);
-      setError('Failed to load lesson. Please try again.');
+      console.error("Failed to fetch lesson:", err);
+      setError("Failed to load lesson. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleAnswerChange = (problemId: number, answer: string) => {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
-      [problemId]: answer
+      [problemId]: answer,
     }));
   };
 
@@ -57,57 +60,66 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
 
     // Validate that all problems have answers
     const unansweredProblems = lesson.problems.filter(
-      problem => !answers[problem.id] || answers[problem.id].trim() === ''
+      (problem) => !answers[problem.id] || answers[problem.id].trim() === ""
     );
 
     if (unansweredProblems.length > 0) {
-      alert(`Please answer all problems before submitting. ${unansweredProblems.length} problem(s) remaining.`);
+      alert(
+        `Please answer all problems before submitting. ${unansweredProblems.length} problem(s) remaining.`
+      );
       return;
     }
 
     try {
       setSubmitting(true);
-      
+
       // Prepare submission data
-      const submissionAnswers: SubmissionAnswer[] = Object.entries(answers).map(([problemId, answer]) => ({
-        problemId: parseInt(problemId),
-        answer: answer.trim()
-      }));
+      const submissionAnswers: SubmissionAnswer[] = Object.entries(answers).map(
+        ([problemId, answer]) => ({
+          problemId: parseInt(problemId),
+          answer: answer.trim(),
+        })
+      );
 
       const submissionData = {
-        attemptId: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        answers: submissionAnswers
+        attemptId: `attempt_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        answers: submissionAnswers,
       };
 
       const response = await api.submitAnswers(lessonId, submissionData);
-      
+
       if (response.success) {
         setResults(response.data);
         setSubmitted(true);
-        
+
         // Navigate to results page with comprehensive data
         const resultsData = {
-          correctAnswers: response.data.correctAnswers || 0,
-          totalAnswers: response.data.totalAnswers || lesson.problems.length,
-          totalXpAwarded: response.data.totalXpAwarded || 0,
-          streakCount: response.data.streakCount || 0,
+          correctAnswers: response.data.results.correctAnswers || 0,
+          totalAnswers:
+            response.data.results.totalAnswers || lesson.problems.length,
+          totalXpAwarded: response.data.results.xpAwarded || 0,
+          streakCount: response.data.user.currentStreak || 0,
           isNewStreak: response.data.isNewStreak || false,
           streakBonusXp: response.data.streakBonusXp || 0,
           previousXp: response.data.previousXp || 0,
-          newXp: response.data.newXp || 0,
+          newXp: response.data.user.totalXp || 0,
           lessonTitle: lesson.title,
-          perfectScore: (response.data.correctAnswers || 0) === lesson.problems.length,
-          improvements: response.data.improvements || []
+          perfectScore:
+            (response.data.results.correctAnswers || 0) ===
+            lesson.problems.length,
+          improvements: [], // Can be enhanced later based on wrong answers
         };
 
         // Small delay for better UX, then navigate to results
         setTimeout(() => {
-          navigate('/results', { state: { resultsData } });
+          navigate("/results", { state: { resultsData } });
         }, 1500);
       }
     } catch (err) {
-      console.error('Failed to submit answers:', err);
-      alert('Failed to submit answers. Please try again.');
+      console.error("Failed to submit answers:", err);
+      alert("Failed to submit answers. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +129,7 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
     if (onBackToLessons) {
       onBackToLessons();
     } else {
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -131,7 +143,9 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
 
   const getProgress = () => {
     if (!lesson) return 0;
-    const answeredCount = Object.values(answers).filter(answer => answer.trim() !== '').length;
+    const answeredCount = Object.values(answers).filter(
+      (answer) => answer.trim() !== ""
+    ).length;
     return Math.round((answeredCount / lesson.problems.length) * 100);
   };
 
@@ -151,7 +165,7 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <p>{error || 'Lesson not found'}</p>
+            <p>{error || "Lesson not found"}</p>
           </div>
           <button
             onClick={handleBackClick}
@@ -170,27 +184,41 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-          <button 
-            onClick={handleBackClick}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <button
+              onClick={handleBackClick}
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Back to Lessons
             </button>
-            
+
             <div className="text-right">
-              <h1 className="text-lg font-semibold text-gray-900">{lesson.title}</h1>
+              <h1 className="text-lg font-semibold text-gray-900">
+                {lesson.title}
+              </h1>
               <p className="text-sm text-gray-600">
-                Progress: {getProgress()}% ({Object.values(answers).filter(a => a.trim() !== '').length}/{lesson.problems.length})
+                Progress: {getProgress()}% (
+                {Object.values(answers).filter((a) => a.trim() !== "").length}/
+                {lesson.problems.length})
               </p>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
-            <div 
+            <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${getProgress()}%` }}
             />
@@ -203,7 +231,9 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
         {/* Lesson Description */}
         {lesson.description && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <h2 className="text-lg font-medium text-blue-900 mb-2">About this lesson</h2>
+            <h2 className="text-lg font-medium text-blue-900 mb-2">
+              About this lesson
+            </h2>
             <p className="text-blue-800">{lesson.description}</p>
           </div>
         )}
@@ -214,7 +244,7 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
             <ProblemCard
               key={problem.id}
               problem={problem}
-              answer={answers[problem.id] || ''}
+              answer={answers[problem.id] || ""}
               onAnswerChange={handleAnswerChange}
               isSubmitted={submitted}
               isCorrect={getAnswerCorrectness(problem.id)}
@@ -227,9 +257,12 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
           <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">Ready to submit?</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Ready to submit?
+                </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Make sure you've answered all {lesson.problems.length} problems before submitting.
+                  Make sure you've answered all {lesson.problems.length}{" "}
+                  problems before submitting.
                 </p>
               </div>
               <button
@@ -237,20 +270,36 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
                 disabled={submitting || getProgress() < 100}
                 className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                   getProgress() === 100 && !submitting
-                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? "bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 {submitting ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Submitting...
                   </span>
                 ) : (
-                  'Submit Answers'
+                  "Submit Answers"
                 )}
               </button>
             </div>
@@ -262,12 +311,17 @@ export default function LessonInterface({ lessonId, onBackToLessons }: LessonInt
           <div className="mt-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-sm border border-green-200 p-6">
             <div className="text-center">
               <div className="text-4xl mb-4">🎉</div>
-              <h3 className="text-xl font-bold text-green-800 mb-2">Lesson Completed!</h3>
+              <h3 className="text-xl font-bold text-green-800 mb-2">
+                Lesson Completed!
+              </h3>
               <p className="text-green-700 mb-4">
-                Great job! You scored {results.correctAnswers || 0} out of {results.totalAnswers || 0} problems correctly.
+                Great job! You scored {results.correctAnswers || 0} out of{" "}
+                {results.totalAnswers || 0} problems correctly.
               </p>
               <div className="animate-pulse">
-                <p className="text-sm text-green-600">Preparing your results...</p>
+                <p className="text-sm text-green-600">
+                  Preparing your results...
+                </p>
               </div>
             </div>
           </div>

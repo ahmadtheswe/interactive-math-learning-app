@@ -1,18 +1,19 @@
-import { Request, Response } from 'express';
-import { SubmissionService } from './service';
-import { SubmissionRequest } from './types';
+import { Request, Response } from "express";
+import { SubmissionService } from "./service";
+import { SubmissionRequest } from "./types";
 
 export class SubmissionHandler {
   static async submitAnswers(req: Request, res: Response): Promise<void> {
     try {
       const lessonId = parseInt(req.params.id);
-      const userIdHeader = req.headers['userid'] || req.headers['x-user-id'] || '1';
+      const userIdHeader =
+        req.headers["userid"] || req.headers["x-user-id"] || "1";
       const userId = parseInt(userIdHeader as string);
 
       if (isNaN(lessonId) || isNaN(userId)) {
         res.status(400).json({
           success: false,
-          error: 'Invalid lesson ID or user ID'
+          error: "Invalid lesson ID or user ID",
         });
         return;
       }
@@ -22,17 +23,18 @@ export class SubmissionHandler {
       if (!attemptId || !answers || !Array.isArray(answers)) {
         res.status(400).json({
           success: false,
-          error: 'Missing required fields: attemptId and answers array'
+          error: "Missing required fields: attemptId and answers array",
         });
         return;
       }
 
       // Validate answers format
       for (const answer of answers) {
-        if (!answer.problemId || typeof answer.answer !== 'string') {
+        if (!answer.problemId || typeof answer.answer !== "string") {
           res.status(400).json({
             success: false,
-            error: 'Invalid answer format. Each answer must have problemId and answer fields'
+            error:
+              "Invalid answer format. Each answer must have problemId and answer fields",
           });
           return;
         }
@@ -40,7 +42,7 @@ export class SubmissionHandler {
 
       const result = await SubmissionService.submitAnswers(userId, lessonId, {
         attemptId,
-        answers
+        answers,
       });
 
       res.json({
@@ -63,14 +65,17 @@ export class SubmissionHandler {
             progressPercent: result.progress.progressPercent,
             completed: result.progress.completed,
           },
-          isResubmission: result.isResubmission
-        }
+          isResubmission: result.isResubmission,
+          streakBonusXp: result.streakBonusXp || 0,
+          previousXp: result.previousXp || 0,
+          isNewStreak: result.isNewStreak || false,
+        },
       });
     } catch (error) {
-      console.error('Submit Answers API Error:', error);
+      console.error("Submit Answers API Error:", error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: "Internal server error",
       });
     }
   }

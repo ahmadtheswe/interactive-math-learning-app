@@ -1,8 +1,6 @@
-import { PrismaClient } from '../../../generated/prisma';
-import { UserProfileStats, UserProfile } from './types';
-import { ProfileMapper } from './mapper';
-
-const prisma = new PrismaClient();
+import { prisma } from "../../db";
+import { UserProfileStats, UserProfile } from "./types";
+import { ProfileMapper } from "./mapper";
 
 export class ProfileService {
   static async getUserStats(userId: number): Promise<UserProfileStats | null> {
@@ -35,10 +33,14 @@ export class ProfileService {
       const totalLessons = await prisma.lesson.count();
 
       // Use mapper to transform data
-      return ProfileMapper.toUserProfileStats(user, userProgresses, totalLessons);
+      return ProfileMapper.toUserProfileStats(
+        user,
+        userProgresses,
+        totalLessons
+      );
     } catch (error) {
-      console.error('Error fetching user stats:', error);
-      throw new Error('Failed to fetch user statistics');
+      console.error("Error fetching user stats:", error);
+      throw new Error("Failed to fetch user statistics");
     }
   }
 
@@ -60,8 +62,8 @@ export class ProfileService {
 
       return user ? ProfileMapper.toUserProfile(user) : null;
     } catch (error) {
-      console.error('Error fetching user:', error);
-      throw new Error('Failed to fetch user');
+      console.error("Error fetching user:", error);
+      throw new Error("Failed to fetch user");
     }
   }
 }

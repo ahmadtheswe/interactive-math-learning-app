@@ -1,15 +1,15 @@
-import { 
-  SubmissionResult, 
-  SubmissionData, 
-  UserStats, 
-  ProgressStats, 
+import {
+  SubmissionResult,
+  SubmissionData,
+  UserStats,
+  ProgressStats,
   StreakCalculation,
   ExistingSubmissionFromDatabase,
   SubmissionUserProgressFromDatabase,
   UpdatedUserFromDatabase,
   SubmissionUserFromDatabase,
-  SubmissionProblemFromDatabase
-} from './types';
+  SubmissionProblemFromDatabase,
+} from "./types";
 
 export class SubmissionMapper {
   /**
@@ -34,11 +34,15 @@ export class SubmissionMapper {
       },
       progress: {
         problemsCompleted: userProgress?.problemsCompleted || 0,
-        totalProblems: userProgress?.totalProblems || existingSubmission.lesson.problems.length,
-        progressPercent: userProgress ? Number(userProgress.progressPercent) : 0,
+        totalProblems:
+          userProgress?.totalProblems ||
+          existingSubmission.lesson.problems.length,
+        progressPercent: userProgress
+          ? Number(userProgress.progressPercent)
+          : 0,
         completed: userProgress?.completed || false,
       },
-      isResubmission: true
+      isResubmission: true,
     };
   }
 
@@ -51,7 +55,10 @@ export class SubmissionMapper {
     correctAnswers: number,
     totalAnswers: number,
     updatedUser: UpdatedUserFromDatabase,
-    userProgress: SubmissionUserProgressFromDatabase
+    userProgress: SubmissionUserProgressFromDatabase,
+    streakBonusXp?: number,
+    previousXp?: number,
+    isNewStreak?: boolean
   ): SubmissionResult {
     return {
       attemptId,
@@ -69,7 +76,10 @@ export class SubmissionMapper {
         progressPercent: Number(userProgress.progressPercent),
         completed: userProgress.completed,
       },
-      isResubmission: false
+      isResubmission: false,
+      streakBonusXp,
+      previousXp,
+      isNewStreak,
     };
   }
 
@@ -92,7 +102,7 @@ export class SubmissionMapper {
       problemId,
       userAnswer,
       isCorrect,
-      xpAwarded
+      xpAwarded,
     };
   }
 
@@ -103,19 +113,21 @@ export class SubmissionMapper {
     return {
       totalXp: user.totalXp,
       currentStreak: user.currentStreak,
-      bestStreak: user.bestStreak
+      bestStreak: user.bestStreak,
     };
   }
 
   /**
    * Maps progress stats from user progress object
    */
-  static toProgressStats(userProgress: SubmissionUserProgressFromDatabase): ProgressStats {
+  static toProgressStats(
+    userProgress: SubmissionUserProgressFromDatabase
+  ): ProgressStats {
     return {
       problemsCompleted: userProgress.problemsCompleted,
       totalProblems: userProgress.totalProblems,
       progressPercent: Number(userProgress.progressPercent),
-      completed: userProgress.completed
+      completed: userProgress.completed,
     };
   }
 
@@ -124,8 +136,12 @@ export class SubmissionMapper {
    */
   static calculateStreak(user: SubmissionUserFromDatabase): StreakCalculation {
     const today = new Date();
-    const todayUTC = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-    
+    const todayUTC = new Date(
+      today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate()
+    );
+
     let newStreak = user.currentStreak;
     let bestStreak = user.bestStreak;
 
@@ -135,12 +151,15 @@ export class SubmissionMapper {
     } else {
       const lastActivityUTC = new Date(user.lastActivityDate);
       const lastActivityDateUTC = new Date(
-        lastActivityUTC.getUTCFullYear(), 
-        lastActivityUTC.getUTCMonth(), 
+        lastActivityUTC.getUTCFullYear(),
+        lastActivityUTC.getUTCMonth(),
         lastActivityUTC.getUTCDate()
       );
 
-      const daysDifference = Math.floor((todayUTC.getTime() - lastActivityDateUTC.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDifference = Math.floor(
+        (todayUTC.getTime() - lastActivityDateUTC.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
 
       if (daysDifference === 0) {
         // Same day - no streak change
@@ -160,35 +179,51 @@ export class SubmissionMapper {
   /**
    * Calculates progress percentage from correct answers and total problems
    */
-  static calculateProgressPercent(correctAnswers: number, totalProblems: number): number {
-    return totalProblems > 0 ? Math.round((correctAnswers / totalProblems) * 100) : 0;
+  static calculateProgressPercent(
+    correctAnswers: number,
+    totalProblems: number
+  ): number {
+    return totalProblems > 0
+      ? Math.round((correctAnswers / totalProblems) * 100)
+      : 0;
   }
 
   /**
    * Determines if lesson is completed based on correct answers vs total problems
    */
-  static isLessonCompleted(correctAnswers: number, totalProblems: number): boolean {
+  static isLessonCompleted(
+    correctAnswers: number,
+    totalProblems: number
+  ): boolean {
     return correctAnswers >= totalProblems;
   }
 
   /**
    * Validates answer based on problem type
    */
-  static validateAnswer(problem: {
-    type: string;
-    correctAnswer: string;
-    options: {
-      optionText: string;
-      isCorrect: boolean;
-    }[];
-  }, userAnswer: string): boolean {
-    if (problem.type === 'multiple_choice') {
+  static validateAnswer(
+    problem: {
+      type: string;
+      correctAnswer: string;
+      options: {
+        optionText: string;
+        isCorrect: boolean;
+      }[];
+    },
+    userAnswer: string
+  ): boolean {
+    if (problem.type === "multiple_choice") {
       // For multiple choice, check if the selected option is correct
-      const selectedOption = problem.options.find((opt) => opt.optionText === userAnswer);
+      const selectedOption = problem.options.find(
+        (opt) => opt.optionText === userAnswer
+      );
       return selectedOption?.isCorrect || false;
-    } else if (problem.type === 'input') {
+    } else if (problem.type === "input") {
       // For input type, compare directly with correct answer
-      return userAnswer.trim().toLowerCase() === problem.correctAnswer.trim().toLowerCase();
+      return (
+        userAnswer.trim().toLowerCase() ===
+        problem.correctAnswer.trim().toLowerCase()
+      );
     }
     return false;
   }
