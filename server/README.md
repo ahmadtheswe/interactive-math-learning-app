@@ -229,15 +229,201 @@ src/
 
 - `POST /api/lessons/:id/submit` - Submit answers with XP and streak calculation
 
+### Recent Updates & Changes
+
+#### Lesson Interface Redesign
+
+**Sequential Problem Display**: Changed from list-based to one-by-one problem presentation
+
+- **Navigation**: Forward-only navigation (no previous button)
+- **Answer Validation**: Must answer current problem before proceeding
+- **Progress Tracking**: Real-time progress indicators without numbered problem jumps
+- **Submit Flow**: Submit button only appears on the final problem
+
+**UX Improvements**:
+
+- **Focused Learning**: Single problem display reduces cognitive load
+- **Forced Progression**: Prevents skipping problems, ensures engagement
+- **Visual Feedback**: Clear "Answer this problem to continue" messaging
+- **Simplified Navigation**: Removed confusing problem numbering and backward navigation
+
+#### Results Screen Enhancements
+
+**Celebration Effects**: Removed dropping stars animation for cleaner UX
+
+- **Performance Celebrations**: Dynamic emojis and colors based on scores
+- **Animated Counters**: Smooth XP counting animations with streak bonuses
+- **Progress Analytics**: Detailed breakdown with level progression visualization
+
+#### Environment Configuration
+
+**Dynamic API Configuration**: Moved from hardcoded URLs to environment variables
+
+- **VITE_API_URL**: Configurable API base URL with validation
+- **VITE_APP_NAME**: Application name configuration
+- **TypeScript Support**: Full type definitions for environment variables
+- **Validation**: Runtime validation with fallback values
+
 ### Key Features
 
-- **XP System**: Each correct answer awards XP based on problem difficulty
-- **Streak Tracking**: Daily streak system with UTC-based calculations
+- **XP System**: Each correct answer awards XP based on problem difficulty (typically 10 XP per correct answer)
+- **Streak Tracking**: Daily streak system with UTC-based calculations and bonus rewards
+- **UUID-based Attempt System**: Mandatory UUID v4 attempt IDs for secure session tracking
 - **Idempotent Submissions**: Using attempt_id + problem_id composite key to prevent duplicate submissions
 - **Progress Tracking**: Real-time lesson completion and progress percentages
 - **Type Safety**: Full TypeScript integration with Prisma-generated types
 - **Clean Start**: Users begin with zero stats for authentic progression
 - **Comprehensive Seeding**: Five lesson categories covering various math topics
+
+## 🎯 XP and Streak System
+
+### XP Calculation
+
+**Base XP**: Each problem has an `xpValue` (default: 10 XP)
+
+- Users earn XP only for **correct answers**
+- No XP penalty for wrong answers
+- XP is awarded immediately upon submission
+
+**Streak Bonus**: Additional XP for maintaining daily streaks
+
+- **Streak > 3 days**: 10% bonus XP on total earned XP
+- Formula: `finalXP = baseXP + (baseXP * 0.1)` when streak > 3
+- Bonus applies to the entire lesson submission
+
+**Example XP Calculation**:
+
+```
+Lesson: 5 problems × 10 XP each = 50 base XP
+User gets 4/5 correct = 40 base XP
+Current streak: 5 days (> 3) = 10% bonus
+Streak bonus: 40 × 0.1 = 4 XP
+Total XP awarded: 40 + 4 = 44 XP
+```
+
+### Streak System
+
+**Daily Streak Logic** (UTC-based):
+
+1. **First submission**: Streak starts at 1
+2. **Same day**: No streak change (maintains current)
+3. **Next day (consecutive)**: Streak increments by 1
+4. **Missed day(s)**: Streak resets to 1
+
+**Streak Calculation Algorithm**:
+
+```typescript
+const daysDifference = Math.floor(
+  (todayUTC - lastActivityDateUTC) / (1000 * 60 * 60 * 24)
+);
+
+if (daysDifference === 0) {
+  newStreak = currentStreak; // Same day
+} else if (daysDifference === 1) {
+  newStreak = currentStreak + 1; // Consecutive day
+} else {
+  newStreak = 1; // Reset after missed day(s)
+}
+```
+
+**Best Streak**: Automatically tracks the highest streak ever achieved
+
+### Level Progression System
+
+**Level Calculation**: Based on total XP with 1000 XP per level
+
+- **Level Formula**: `Math.floor(totalXP / 1000) + 1`
+- **Progress to Next Level**: `(totalXP % 1000) / 1000 * 100%`
+- **XP to Next Level**: `1000 - (totalXP % 1000)`
+
+**Examples**:
+
+- 0-999 XP = Level 1
+- 1000-1999 XP = Level 2
+- 2500 XP = Level 3 (50% to Level 4, needs 500 more XP)
+
+## 🔒 UUID-based Attempt System
+
+### Security & Session Management
+
+**Mandatory UUID Requirement**: All lesson attempts require a valid UUID v4
+
+- **Route**: `/lesson/:lessonId?attempt-id=<uuid-v4>`
+- **Validation**: UUID format validated on both client and server
+- **Security**: Prevents session hijacking and ensures unique attempts
+
+**UUID Generation & Validation**:
+
+```typescript
+// Client-side generation
+const attemptId = crypto.randomUUID(); // UUID v4
+
+// Validation regex
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+```
+
+**Access Control**:
+
+- Missing attempt-id → Redirect to 404
+- Invalid UUID format → Redirect to 404
+- Valid UUID → Allow lesson access
+
+**Navigation Flow**:
+
+1. User clicks lesson card → Auto-generate UUID → Navigate with attempt-id
+2. LessonPage validates UUID → Allow/deny access
+3. LessonInterface uses UUID for submission tracking
+
+### Frontend Integration
+
+#### UUID-based Session Management
+
+**Client-Side Components**:
+
+1. **LessonCard.tsx**: Generates UUID and navigates with attempt-id
+
+   ```typescript
+   const attemptId = generateUUID();
+   navigate(`/lesson/${lesson.id}?attempt-id=${attemptId}`);
+   ```
+
+2. **LessonPage.tsx**: Validates UUID and manages access control
+
+   ```typescript
+   const attemptId = searchParams.get("attempt-id");
+   if (!attemptId || !isValidUUID(attemptId)) {
+     navigate("/404", { replace: true });
+   }
+   ```
+
+3. **LessonInterface.tsx**: Uses UUID for submission tracking
+   ```typescript
+   const submissionData = {
+     attemptId: attemptId, // From props
+     answers: submissionAnswers,
+   };
+   ```
+
+**Utility Functions** (`src/utils/uuid.ts`):
+
+- `generateUUID()`: Creates UUID v4 using `crypto.randomUUID()`
+- `isValidUUID(str)`: Validates UUID v4 format with regex
+
+#### Environment Configuration
+
+**Client Environment Variables** (`.env` in client folder):
+
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_APP_NAME=Interactive Math Learning
+```
+
+**Configuration Files**:
+
+- `src/config/env.ts`: Centralized environment validation
+- `src/vite-env.d.ts`: TypeScript definitions for VITE\_ variables
+- Runtime validation with fallback values for production safety
 
 ### Troubleshooting
 
@@ -254,13 +440,30 @@ src/
 2. **Submission Unique Constraint Errors**  
    This was fixed by changing from single `attempt_id` constraint to composite `(attempt_id, problem_id)` constraint.
 
-3. **Database Connection Issues**
+3. **UUID Validation Errors**
+
+   **Symptoms**: Redirected to 404 when accessing lessons
+   **Causes**:
+
+   - Missing `attempt-id` query parameter
+   - Invalid UUID v4 format
+   - Browser cached old URLs without attempt-id
+
+   **Solutions**:
+
+   ```bash
+   # Clear browser cache and localStorage
+   # Ensure navigation goes through LessonCard component
+   # Check that generateUUID() is working in browser console
+   ```
+
+4. **Database Connection Issues**
 
    - Ensure PostgreSQL is running on port 5400
    - Check `.env` file has correct `DATABASE_URL`
    - Verify database exists and is accessible
 
-4. **Seeding Errors**
+5. **Seeding Errors**
 
    ```bash
    npm run db:fresh
@@ -268,7 +471,32 @@ src/
 
    This resets and reseeds everything.
 
-5. **VS Code Debug Issues**
+6. **Environment Variable Issues**
+
+   **Frontend (.env in client folder)**:
+
+   ```env
+   VITE_API_URL=http://localhost:3000/api
+   VITE_APP_NAME=Interactive Math Learning
+   ```
+
+   **Backend (.env in server folder)**:
+
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/math_learning"
+   PORT=3000
+   ```
+
+7. **Attempt ID Session Issues**
+
+   **Symptoms**: Can't submit lessons, UUID errors
+   **Solutions**:
+
+   - Always navigate through lesson cards (don't bookmark lesson URLs)
+   - Clear browser session storage if stuck
+   - Ensure `crypto.randomUUID()` is supported (modern browsers only)
+
+8. **VS Code Debug Issues**
    - Use the provided `.vscode/launch.json` configurations
    - Try "Debug Server (ts-node)" for development
    - Ensure `.env` file exists before debugging
@@ -345,7 +573,7 @@ CREATE INDEX idx_problem_options_problem ON problem_options(problem_id);
 -- ==============================
 CREATE TABLE submissions (
     id SERIAL PRIMARY KEY,
-    attempt_id VARCHAR(255) NOT NULL, -- Removed UNIQUE constraint
+    attempt_id VARCHAR(255) NOT NULL, -- UUID v4 format required
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     lesson_id INT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
     problem_id INT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
@@ -356,8 +584,12 @@ CREATE TABLE submissions (
 );
 
 -- Composite unique constraint: one submission per problem per attempt
+-- This allows multiple problems per UUID attempt but prevents duplicates
 CREATE UNIQUE INDEX idx_submissions_attempt_problem
 ON submissions(attempt_id, problem_id);
+
+-- Index for performance on attempt-based queries
+CREATE INDEX idx_submissions_attempt_id ON submissions(attempt_id);
 
 -- ==============================
 -- 6. USER PROGRESS

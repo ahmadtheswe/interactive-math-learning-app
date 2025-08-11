@@ -5,7 +5,7 @@ import { api } from "../services/api";
 import LessonCard from "./LessonCard";
 
 interface LessonsListProps {
-  onLessonClick: (lessonId: number) => void;
+  onLessonClick?: (lessonId: number) => void; // Made optional
 }
 
 export default function LessonsList({ onLessonClick }: LessonsListProps) {
@@ -34,7 +34,9 @@ export default function LessonsList({ onLessonClick }: LessonsListProps) {
   };
 
   const handleLessonClick = (lessonId: number) => {
-    onLessonClick(lessonId);
+    if (onLessonClick) {
+      onLessonClick(lessonId);
+    }
   };
 
   if (loading) {

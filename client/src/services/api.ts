@@ -22,6 +22,30 @@ export const api = {
     return response.json();
   },
 
+  // Update lesson progress manually
+  async updateLessonProgress(
+    lessonId: number,
+    problemsCompleted: number,
+    userId: number = 1
+  ): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/lessons/${lessonId}/progress`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-ID": userId.toString(),
+        },
+        body: JSON.stringify({ problemsCompleted }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   // Submission API
   async submitAnswers(lessonId: number, submissionData: any): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/submit`, {

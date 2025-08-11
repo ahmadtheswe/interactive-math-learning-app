@@ -6,16 +6,19 @@ import ProblemCard from "./ProblemCard";
 
 interface LessonInterfaceProps {
   lessonId: number;
+  attemptId: string; // New required prop for attempt ID
   onBackToLessons?: () => void; // Made optional for backward compatibility
 }
 
 export default function LessonInterface({
   lessonId,
+  attemptId,
   onBackToLessons,
 }: LessonInterfaceProps) {
   const navigate = useNavigate();
   const [lesson, setLesson] = useState<LessonWithDetails | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -64,8 +67,14 @@ export default function LessonInterface({
     );
 
     if (unansweredProblems.length > 0) {
+      const unansweredNumbers = unansweredProblems
+        .map(
+          (problem) => lesson.problems.findIndex((p) => p.id === problem.id) + 1
+        )
+        .join(", ");
+
       alert(
-        `Please answer all problems before submitting. ${unansweredProblems.length} problem(s) remaining.`
+        `Please answer all problems before submitting. Missing answers for problem(s): ${unansweredNumbers}`
       );
       return;
     }
@@ -82,9 +91,7 @@ export default function LessonInterface({
       );
 
       const submissionData = {
-        attemptId: `attempt_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`,
+        attemptId: attemptId,
         answers: submissionAnswers,
       };
 
@@ -133,8 +140,34 @@ export default function LessonInterface({
     }
   };
 
+  const handleNext = () => {
+    if (lesson && currentProblemIndex < lesson.problems.length - 1) {
+      setCurrentProblemIndex(currentProblemIndex + 1);
+    }
+  };
+
+  const canGoNext = () => {
+    if (!lesson || currentProblemIndex >= lesson.problems.length - 1) {
+      return false;
+    }
+    // Check if current problem is answered
+    const currentProblem = getCurrentProblem();
+    if (!currentProblem) return false;
+
+    const currentAnswer = answers[currentProblem.id];
+    return currentAnswer && currentAnswer.trim() !== "";
+  };
+
+  const isLastProblem = () => {
+    return lesson && currentProblemIndex === lesson.problems.length - 1;
+  };
+
+  const getCurrentProblem = () => {
+    return lesson?.problems[currentProblemIndex];
+  };
+
   // TODO implement get correct answers
-  const getAnswerCorrectness = (problemId: number): boolean | undefined => {
+  const getAnswerCorrectness = (_problemId: number): boolean | undefined => {
     if (!results || !results.results) return undefined;
     // This would need to be implemented based on your API response structure
     // For now, returning undefined as placeholder
@@ -147,6 +180,14 @@ export default function LessonInterface({
       (answer) => answer.trim() !== ""
     ).length;
     return Math.round((answeredCount / lesson.problems.length) * 100);
+  };
+
+  const getProblemProgress = () => {
+    if (!lesson) return { current: 0, total: 0 };
+    return {
+      current: currentProblemIndex + 1,
+      total: lesson.problems.length,
+    };
   };
 
   if (loading) {
@@ -209,9 +250,13 @@ export default function LessonInterface({
                 {lesson.title}
               </h1>
               <p className="text-sm text-gray-600">
-                Progress: {getProgress()}% (
+                Problem {getProblemProgress().current} of{" "}
+                {getProblemProgress().total}
+              </p>
+              <p className="text-xs text-gray-500">
+                Answered:{" "}
                 {Object.values(answers).filter((a) => a.trim() !== "").length}/
-                {lesson.problems.length})
+                {lesson.problems.length}
               </p>
             </div>
           </div>
@@ -238,73 +283,101 @@ export default function LessonInterface({
           </div>
         )}
 
-        {/* Problems */}
-        <div className="space-y-6">
-          {lesson.problems.map((problem) => (
-            <ProblemCard
-              key={problem.id}
-              problem={problem}
-              answer={answers[problem.id] || ""}
-              onAnswerChange={handleAnswerChange}
-              isSubmitted={submitted}
-              isCorrect={getAnswerCorrectness(problem.id)}
-            />
-          ))}
-        </div>
-
-        {/* Submit Section */}
-        {!submitted && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Ready to submit?
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Make sure you've answered all {lesson.problems.length}{" "}
-                  problems before submitting.
-                </p>
+        {/* Problems - Single Problem Display */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {getCurrentProblem() && (
+            <div className="p-6">
+              <div className="mb-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  Problem {currentProblemIndex + 1} of {lesson.problems.length}
+                </span>
               </div>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || getProgress() < 100}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                  getProgress() === 100 && !submitting
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                {submitting ? (
-                  <span className="flex items-center">
+
+              <ProblemCard
+                key={getCurrentProblem()!.id}
+                problem={getCurrentProblem()!}
+                answer={answers[getCurrentProblem()!.id] || ""}
+                onAnswerChange={handleAnswerChange}
+                isSubmitted={submitted}
+                isCorrect={getAnswerCorrectness(getCurrentProblem()!.id)}
+              />
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="border-t border-gray-200 px-6 py-4">
+            <div className="flex justify-end">
+              {!isLastProblem() ? (
+                <div className="text-center">
+                  <button
+                    onClick={handleNext}
+                    disabled={!canGoNext()}
+                    className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                      canGoNext()
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-50 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Next Problem
                     <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-5 h-5 ml-2"
                       fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
                       <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
-                    Submitting...
-                  </span>
-                ) : (
-                  "Submit Answers"
-                )}
-              </button>
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting || getProgress() < 100}
+                    className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
+                      getProgress() === 100 && !submitting
+                        ? "bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {submitting ? (
+                      <span className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Submitting...
+                      </span>
+                    ) : (
+                      "Submit"
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
 
         {/* Results - Success Message */}
         {submitted && results && (

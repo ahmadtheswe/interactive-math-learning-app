@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-11] - UUID-based Attempt System & Navigation Improvements
+
+### Added
+
+- **UUID-based Attempt System**:
+  - Implemented mandatory UUID v4 attempt IDs for all lesson sessions
+  - Added `src/utils/uuid.ts` with UUID generation and validation utilities
+  - Created secure session management preventing unauthorized lesson access
+  - Added UUID validation on both client and server sides with proper error handling
+- **Enhanced Navigation Security**:
+  - Modified lesson URLs to require attempt-id query parameter (`/lesson/:id?attempt-id=<uuid>`)
+  - Added automatic UUID generation when clicking lesson cards
+  - Implemented redirect to 404 page for missing or invalid attempt IDs
+  - Added session validation loading states during UUID verification
+- **API Service Enhancements**:
+  - Added `updateLessonProgress()` method for manual progress tracking
+  - Enhanced API service with proper headers for user identification
+  - Improved error handling and response validation across all API methods
+- **Comprehensive Documentation**:
+  - Updated server README with detailed XP and streak calculation explanations
+  - Added UUID-based attempt system documentation with security details
+  - Documented level progression system (1000 XP per level)
+  - Added troubleshooting section for UUID validation errors
+  - Included client-side UUID integration documentation
+
+### Changed
+
+- **Lesson Interface Navigation**:
+  - Removed previous button and problem numbering indicators for simplified UX
+  - Implemented forward-only navigation with answer validation requirements
+  - Centered "Next Problem" button with clear progression messaging
+  - Enhanced final problem indicator with motivational messaging
+- **Results Screen Improvements**:
+  - Removed distracting dropping stars animation for cleaner user experience
+  - Maintained celebration elements while improving visual focus
+  - Enhanced performance feedback with better visual hierarchy
+- **Component Architecture**:
+  - Updated `LessonCard.tsx` to handle UUID generation and navigation directly
+  - Modified `LessonPage.tsx` to validate UUID parameters with proper error handling
+  - Enhanced `LessonInterface.tsx` to accept and use attempt IDs from props
+  - Made `onLessonClick` props optional across components for backward compatibility
+- **Submission Flow**:
+  - Changed from generated attempt IDs to passed UUID parameters
+  - Updated submission data structure to use UUID from navigation state
+  - Enhanced security by preventing session hijacking through URL manipulation
+
+### Fixed
+
+- **Navigation Flow Issues**:
+  - Resolved issues where users could access lessons without proper session validation
+  - Fixed component prop passing and optional callback handling
+  - Corrected UUID validation error messages and redirect behavior
+- **Code Quality Improvements**:
+  - Removed unused navigation functions (handlePrevious, canGoPrevious, etc.)
+  - Cleaned up duplicate function declarations and variable conflicts
+  - Fixed TypeScript compilation errors related to component interfaces
+- **Documentation Gaps**:
+  - Added comprehensive XP calculation examples with streak bonuses
+  - Documented streak reset logic with UTC-based day calculations
+  - Included environment variable setup for both client and server
+  - Added frontend integration details for UUID system
+
+### Security
+
+- **Session Management**:
+  - Implemented UUID v4 validation preventing unauthorized lesson access
+  - Added session validation at multiple levels (client routing and server API)
+  - Protected against direct URL manipulation and session hijacking attempts
+  - Ensured all lesson attempts require valid UUID session tokens
+
 ## [2025-08-11] - Environment Variable Configuration & Frontend Improvements
 
 ### Added
