@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import LessonsPage from './pages/LessonsPage';
-import LessonPage from './pages/LessonPage';
-import ResultsPage from './pages/ResultsPage';
-import NotFoundPage from './pages/NotFoundPage';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LessonsPage from "./pages/LessonsPage";
+import LessonPage from "./pages/LessonPage";
+import ResultsPage from "./pages/ResultsPage";
+import ProfilePage from "./pages/ProfilePage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   return (
@@ -11,10 +12,11 @@ function App() {
         <Route path="/" element={<LessonsPage />} />
         <Route path="/lesson/:lessonId" element={<LessonPage />} />
         <Route path="/results" element={<ResultsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );
 }
 
-export default App
+export default App;

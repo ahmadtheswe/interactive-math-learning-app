@@ -83,3 +83,18 @@ export interface SubmissionResult {
   improvements?: string[];
   results?: any; // For backward compatibility
 }
+
+export interface UserProfileStats {
+  totalXp: number;
+  currentStreak: number;
+  bestStreak: number;
+  progressPercentage: number;
+  completedLessons: number;
+  totalLessons: number;
+  lastActivityDate: string | null;
+}
+
+export interface ProfileStatsResponse {
+  success: true;
+  data: UserProfileStats;
+}

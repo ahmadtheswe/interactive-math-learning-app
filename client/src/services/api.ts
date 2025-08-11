@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = "http://localhost:5000/api";
 
 export const api = {
   // Lessons API
@@ -11,7 +11,9 @@ export const api = {
   },
 
   async getLessonById(lessonId: number, userId: number = 1): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}?userId=${userId}`);
+    const response = await fetch(
+      `${API_BASE_URL}/lessons/${lessonId}?userId=${userId}`
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -21,16 +23,25 @@ export const api = {
   // Submission API
   async submitAnswers(lessonId: number, submissionData: any): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/submit`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(submissionData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
-  }
+  },
+
+  // Profile API
+  async getProfileStats(userId: number = 1): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/profile/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
 };
