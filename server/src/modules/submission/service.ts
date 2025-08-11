@@ -4,6 +4,7 @@ import {
   SubmissionResult,
   SubmissionData,
   StreakCalculation,
+  ProblemResult,
 } from "./types";
 import { SubmissionMapper } from "./mapper";
 
@@ -90,6 +91,7 @@ export class SubmissionService {
       let correctAnswers = 0;
       let totalXpAwarded = 0;
       const submissionData: SubmissionData[] = [];
+      const problemResults: ProblemResult[] = [];
 
       for (const answer of submission.answers) {
         const problem = lesson.problems.find((p) => p.id === answer.problemId);
@@ -101,10 +103,19 @@ export class SubmissionService {
           answer.answer
         );
 
+        const xpAwarded = isCorrect ? problem.xpValue : 0;
+
         if (isCorrect) {
           correctAnswers++;
           totalXpAwarded += problem.xpValue;
         }
+
+        // Add to problem results
+        problemResults.push({
+          problemId: problem.id,
+          isCorrect: isCorrect,
+          xpAwarded: xpAwarded,
+        });
 
         // Use mapper to create submission data
         submissionData.push(
@@ -115,7 +126,7 @@ export class SubmissionService {
             problem.id,
             answer.answer,
             isCorrect,
-            isCorrect ? problem.xpValue : 0
+            xpAwarded
           )
         );
       }
@@ -195,7 +206,8 @@ export class SubmissionService {
         userProgress,
         streakBonusXp,
         previousXp,
-        newStreak === 1 || (user.currentStreak === 0 && newStreak > 0) // isNewStreak
+        newStreak === 1 || (user.currentStreak === 0 && newStreak > 0), // isNewStreak
+        problemResults // Pass problem results
       );
     } catch (error) {
       console.error("Error submitting answers:", error);

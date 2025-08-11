@@ -53,6 +53,7 @@ export class SubmissionHandler {
             correctAnswers: result.correctAnswers,
             totalAnswers: result.totalAnswers,
             xpAwarded: result.totalXpAwarded,
+            problemResults: result.problemResults, // Add detailed problem results
           },
           user: {
             totalXp: result.user.totalXp,

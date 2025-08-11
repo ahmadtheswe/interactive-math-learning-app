@@ -23,6 +23,12 @@ export interface ProgressStats {
   completed: boolean;
 }
 
+export interface ProblemResult {
+  problemId: number;
+  isCorrect: boolean;
+  xpAwarded: number;
+}
+
 export interface SubmissionResult {
   attemptId: string;
   totalXpAwarded: number;
@@ -34,6 +40,7 @@ export interface SubmissionResult {
   streakBonusXp?: number;
   previousXp?: number;
   isNewStreak?: boolean;
+  problemResults?: ProblemResult[]; // Add detailed problem results
 }
 
 export interface SubmissionResults {

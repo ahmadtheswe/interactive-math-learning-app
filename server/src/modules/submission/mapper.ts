@@ -9,6 +9,7 @@ import {
   UpdatedUserFromDatabase,
   SubmissionUserFromDatabase,
   SubmissionProblemFromDatabase,
+  ProblemResult,
 } from "./types";
 
 export class SubmissionMapper {
@@ -58,7 +59,8 @@ export class SubmissionMapper {
     userProgress: SubmissionUserProgressFromDatabase,
     streakBonusXp?: number,
     previousXp?: number,
-    isNewStreak?: boolean
+    isNewStreak?: boolean,
+    problemResults?: ProblemResult[]
   ): SubmissionResult {
     return {
       attemptId,
@@ -80,6 +82,7 @@ export class SubmissionMapper {
       streakBonusXp,
       previousXp,
       isNewStreak,
+      problemResults,
     };
   }
 

@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { isValidUUID } from "../utils/uuid";
+
+interface ProblemResult {
+  id: number;
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  xpValue: number;
+}
 
 interface ResultsData {
   correctAnswers: number;
@@ -13,6 +23,8 @@ interface ResultsData {
   lessonTitle: string;
   perfectScore?: boolean;
   improvements?: string[];
+  attemptId?: string; // Add attemptId to results data
+  problemResults?: ProblemResult[]; // Add problem results for summary
 }
 
 export default function ResultsPage() {
@@ -44,7 +56,30 @@ export default function ResultsPage() {
     lessonTitle,
     perfectScore = false,
     improvements = [],
+    attemptId,
+    problemResults = [],
   } = resultsData;
+
+  // Validate attempt ID on component mount
+  useEffect(() => {
+    if (!attemptId || !isValidUUID(attemptId)) {
+      // Redirect to not found page if attempt-id is missing or invalid
+      navigate("/404", { replace: true });
+      return;
+    }
+  }, [attemptId, navigate]);
+
+  // Don't render if validation hasn't passed yet
+  if (!attemptId || !isValidUUID(attemptId)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Validating session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const scorePercent = Math.round(
     (correctAnswers / Math.max(totalAnswers, 1)) * 100
@@ -285,6 +320,81 @@ export default function ResultsPage() {
             </div>
           </div>
         </div>
+
+        {/* Problem Summary */}
+        {problemResults.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <span className="text-2xl mr-3">📝</span>
+              Problem Summary
+            </h3>
+
+            <div className="space-y-4">
+              {problemResults.map((result, index) => (
+                <div
+                  key={result.id}
+                  className={`border rounded-lg p-4 ${
+                    result.isCorrect
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center">
+                      <span className="font-medium text-gray-700 mr-2">
+                        Problem {index + 1}:
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          result.isCorrect
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {result.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {result.xpValue} XP
+                    </span>
+                  </div>
+
+                  <div className="mb-3">
+                    <p className="text-gray-800 font-medium mb-2">
+                      {result.question}
+                    </p>
+                  </div>
+
+                  <div className="mb-3">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">
+                        Your Answer:
+                      </span>
+                      <p
+                        className={`mt-1 p-2 rounded text-sm ${
+                          result.isCorrect
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {result.userAnswer}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!result.isCorrect && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <button className="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <span className="text-base mr-1">💡</span>
+                        Get Hint
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Improvement Suggestions */}
         {improvements.length > 0 && (

@@ -117,9 +117,27 @@ export default function LessonInterface({
             (response.data.results.correctAnswers || 0) ===
             lesson.problems.length,
           improvements: [], // Can be enhanced later based on wrong answers
+          attemptId: attemptId, // Pass the attemptId to results page
+          problemResults: lesson.problems.map((problem) => {
+            const userAnswer = answers[problem.id] || "";
+
+            // Get correctness from server response
+            // The server returns detailed results for each problem
+            const problemResult = response.data.results.problemResults?.find(
+              (result: any) => result.problemId === problem.id
+            );
+
+            return {
+              id: problem.id,
+              question: problem.question,
+              userAnswer: userAnswer,
+              correctAnswer: "Hidden for security", // Don't expose correct answer
+              isCorrect: problemResult?.isCorrect || false, // Server determines correctness
+              xpValue: problem.xpValue,
+            };
+          }),
         };
 
-        // Small delay for better UX, then navigate to results
         setTimeout(() => {
           navigate("/results", { state: { resultsData } });
         }, 1500);
