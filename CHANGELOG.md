@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-11] - Environment Variable Configuration & Frontend Improvements
+
+### Added
+
+- **Environment Variable Management**:
+  - Created `.env.example` template file with all required environment variables
+  - Added `.env` file with development configuration for API endpoints
+  - Implemented centralized environment configuration in `src/config/env.ts`
+  - Added environment variable validation with warning system for missing variables
+  - Extended TypeScript definitions in `vite-env.d.ts` for type safety
+- **API Configuration**:
+  - Moved hardcoded API URL to environment variable (`VITE_API_BASE_URL`)
+  - Added fallback mechanisms for missing environment variables
+  - Centralized API base URL configuration with proper TypeScript support
+- **Development Experience**:
+  - Updated `.gitignore` files to properly exclude environment files
+  - Added environment setup documentation in client README
+  - Created environment helper utilities for development/production detection
+
+### Changed
+
+- **API Service Architecture**:
+  - Refactored `api.ts` to use centralized environment configuration
+  - Removed hardcoded API URLs in favor of configurable environment variables
+  - Enhanced error handling and fallback mechanisms for configuration
+- **Build Configuration**:
+  - Updated Vite environment variable handling with proper prefixing
+  - Enhanced TypeScript support for environment variables
+  - Improved development workflow with environment file copying instructions
+- **Documentation Updates**:
+  - Added comprehensive environment configuration section to client README
+  - Documented all environment variables and their purposes
+  - Updated setup instructions to include environment file configuration
+
+### Fixed
+
+- **Configuration Management**:
+  - Resolved hardcoded API endpoints that prevented easy deployment configuration
+  - Fixed missing environment variable exclusions in `.gitignore` files
+  - Ensured proper TypeScript type safety for environment variables
+
 ## [2025-08-11] - Profile/Stats Page Implementation
 
 ### Added

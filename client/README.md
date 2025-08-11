@@ -94,16 +94,41 @@ client/
    npm install
    ```
 
-2. Start the development server:
+2. Set up environment variables:
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration if needed
+   ```
+
+3. Start the development server:
 
    ```bash
    npm run dev
    ```
 
-3. Build for production:
+4. Build for production:
    ```bash
    npm run build
    ```
+
+## 🔧 Environment Configuration
+
+The application uses environment variables for configuration. Copy `.env.example` to `.env` and adjust values as needed:
+
+```env
+# API Configuration
+VITE_API_BASE_URL=http://localhost:5000/api
+
+# Application Settings
+VITE_APP_TITLE=Interactive Math Learning App
+VITE_APP_VERSION=1.0.0
+
+# Environment
+NODE_ENV=development
+```
+
+**Important**: All client-side environment variables must be prefixed with `VITE_` to be accessible in the browser.
 
 ## 🎯 Key Components Explained
 

@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:5000/api";
+import { env } from "../config/env";
+
+const API_BASE_URL = env.API_BASE_URL;
 
 export const api = {
   // Lessons API
