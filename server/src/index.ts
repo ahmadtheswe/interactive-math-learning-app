@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { profileRoutes } from "./routes/profileRoutes";
 import { lessonRoutes } from "./routes/lessonRoutes";
+import { aiRoutes } from "./routes/aiRoutes";
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ app.use("/api/profile", profileRoutes);
 
 // Lesson routes
 app.use("/api/lessons", lessonRoutes);
+
+// AI routes
+app.use("/api/ai", aiRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -194,10 +194,17 @@ src/
 │   │   ├── service.ts      # SubmissionService - business logic
 │   │   ├── handler.ts      # SubmissionHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
+│   ├── ai/
+│   │   ├── service.ts      # AIService - OpenAI integration & hint generation
+│   │   ├── handler.ts      # AIHandler - HTTP request handling for hints
+│   │   ├── mapper.ts       # AIMapper - response formatting
+│   │   ├── types.ts        # AI-related type definitions
+│   │   └── index.ts        # Module exports
 │   └── index.ts            # Main modules export
 ├── routes/
 │   ├── profileRoutes.ts    # Profile API routes
-│   └── lessonRoutes.ts     # Lesson & submission API routes
+│   ├── lessonRoutes.ts     # Lesson & submission API routes
+│   └── aiRoutes.ts         # AI hint API routes
 ├── generated/              # Prisma generated client
 │   └── prisma/
 └── index.ts                # Main application entry point
@@ -228,6 +235,10 @@ src/
 #### Submission Module
 
 - `POST /api/lessons/:id/submit` - Submit answers with XP and streak calculation
+
+#### AI Module
+
+- `POST /api/ai/hint` - Get AI-generated hints for incorrect answers
 
 ### Recent Updates & Changes
 
@@ -271,6 +282,7 @@ src/
 - **UUID-based Attempt System**: Mandatory UUID v4 attempt IDs for secure session tracking
 - **Idempotent Submissions**: Using attempt_id + problem_id composite key to prevent duplicate submissions
 - **Progress Tracking**: Real-time lesson completion and progress percentages
+- **AI Hint System**: OpenAI-powered personalized hints for incorrect answers with teen-friendly language
 - **Type Safety**: Full TypeScript integration with Prisma-generated types
 - **Clean Start**: Users begin with zero stats for authentic progression
 - **Comprehensive Seeding**: Five lesson categories covering various math topics
@@ -341,6 +353,126 @@ if (daysDifference === 0) {
 - 0-999 XP = Level 1
 - 1000-1999 XP = Level 2
 - 2500 XP = Level 3 (50% to Level 4, needs 500 more XP)
+
+## 🤖 AI Hint System
+
+### Teen-Friendly Learning Assistant
+
+**AI-Powered Hints**: Integrated OpenAI GPT-3.5-turbo to provide personalized hints for incorrect answers
+
+- **Smart Context Awareness**: AI analyzes the problem question, user's incorrect answer, and problem type
+- **Teen-Friendly Language**: Hints are crafted with casual, encouraging language and emojis
+- **No Answer Spoiling**: AI guides students toward the correct thinking process without revealing answers
+- **Fallback Support**: Graceful degradation with encouraging messages when AI is unavailable
+
+### API Integration
+
+**Endpoint**: `POST /api/ai/hint`
+
+**Request Body**:
+
+```json
+{
+  "lessonId": 1,
+  "problemId": 5,
+  "userAnswer": "wrong_answer"
+}
+```
+
+**Response**:
+
+```json
+{
+  "success": true,
+  "data": {
+    "hint": "Let's think about this step by step. What's the first thing you need to do to solve this problem? 🤔",
+    "problemQuestion": "What is 2 + 3?"
+  }
+}
+```
+
+**Headers**: Requires `userid` or `x-user-id` header for user identification
+
+### AI Service Architecture
+
+**OpenAI Integration**:
+
+- **Model**: GPT-3.5-turbo for cost-effective, fast responses
+- **Context-Aware**: Includes problem details, user answer, and available options
+- **Token Limit**: 150 tokens max to keep hints concise and focused
+- **Temperature**: 0.7 for balanced creativity and consistency
+
+**Security & Validation**:
+
+- **Server-Side Only**: Correct answers never exposed to frontend
+- **Answer Verification**: Validates if user's answer is actually incorrect
+- **Input Sanitization**: Validates all request parameters before processing
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+
+### Environment Configuration
+
+**Required Environment Variables**:
+
+```env
+# OpenAI API Configuration
+OPENAI_API_KEY="your_openai_api_key_here"
+```
+
+**Setup Instructions**:
+
+1. Obtain OpenAI API key from https://platform.openai.com/
+2. Add key to both `.env` and `.env.example` files
+3. Ensure sufficient API credits for hint generation
+
+### Hint Generation Logic
+
+**Smart Answer Checking**:
+
+```typescript
+// Normalizes and compares answers case-insensitively
+const isCorrect = normalizedCorrect === normalizedUser;
+if (isCorrect) {
+  return "Great job! Your answer is actually correct! 🎉";
+}
+```
+
+**Contextual Prompt Engineering**:
+
+- **System Prompt**: Defines AI as a helpful math tutor for teenagers
+- **User Prompt**: Includes problem context, user answer, and available options
+- **Guidelines**: Keep hints encouraging, concise, and process-focused
+
+**Fallback Strategies**:
+
+1. **OpenAI Failure**: Returns encouraging generic hint
+2. **Problem Not Found**: User-friendly error message
+3. **Invalid Input**: Clear validation error messages
+
+### Usage Examples
+
+**Multiple Choice Problem**:
+
+```
+Problem: "What is 5 × 3?"
+User Answer: "12"
+AI Hint: "Close! Remember, multiplication is repeated addition. Try counting 5 + 5 + 5 or use your times tables! ✨"
+```
+
+**Input Problem**:
+
+```
+Problem: "Solve: x + 4 = 10"
+User Answer: "5"
+AI Hint: "You're on the right track! Remember to check your work by substituting your answer back into the equation. Does 5 + 4 = 10? 🧮"
+```
+
+**Fraction Problem**:
+
+```
+Problem: "1/2 + 1/4 = ?"
+User Answer: "2/6"
+AI Hint: "Great thinking about fractions! Remember to find a common denominator first. What number can both 2 and 4 divide into evenly? 🤔"
+```
 
 ## 🔒 UUID-based Attempt System
 
@@ -484,6 +616,7 @@ VITE_APP_NAME=Interactive Math Learning
 
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/math_learning"
+   OPENAI_API_KEY="sk-proj-your-actual-openai-key-here"
    PORT=3000
    ```
 
@@ -497,9 +630,47 @@ VITE_APP_NAME=Interactive Math Learning
    - Ensure `crypto.randomUUID()` is supported (modern browsers only)
 
 8. **VS Code Debug Issues**
+
    - Use the provided `.vscode/launch.json` configurations
    - Try "Debug Server (ts-node)" for development
    - Ensure `.env` file exists before debugging
+
+9. **AI Hint System Issues**
+
+   **Symptoms**: AI hints not working, generic fallback messages
+   **Causes**:
+
+   - Missing or invalid `OPENAI_API_KEY` in `.env`
+   - Insufficient OpenAI API credits
+   - Network connectivity issues
+   - Invalid request format
+
+   **Solutions**:
+
+   ```bash
+   # Check environment variables
+   echo $OPENAI_API_KEY  # Should not be empty
+
+   # Verify API key is valid
+   # Test with a simple OpenAI API call
+
+   # Check OpenAI account credits
+   # Visit https://platform.openai.com/usage
+
+   # Test hint endpoint manually
+   curl -X POST http://localhost:3000/api/ai/hint \
+     -H "Content-Type: application/json" \
+     -H "userid: 1" \
+     -d '{"lessonId": 1, "problemId": 1, "userAnswer": "wrong"}'
+   ```
+
+   **Environment Setup**:
+
+   ```env
+   # Required in .env file
+   OPENAI_API_KEY="sk-proj-your-actual-key-here"
+   DATABASE_URL="postgresql://username:password@localhost:5432/database"
+   ```
 
 ### Database Schema
 

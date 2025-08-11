@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-11] - AI Hint System Implementation
+
+### Added
+
+- **AI-Powered Hint System**:
+  - Integrated OpenAI GPT-3.5-turbo for personalized learning assistance
+  - Teen-friendly AI tutor providing encouraging hints for incorrect answers
+  - Context-aware hint generation analyzing problem type, question, and user's incorrect answer
+  - Smart answer validation preventing hints for already-correct answers with celebration messages
+  - Fallback hint system ensuring graceful degradation when AI is unavailable
+  - Comprehensive error handling with user-friendly messages for all failure scenarios
+- **AI Module Architecture**:
+  - Complete AI module (`src/modules/ai/`) with service, handler, mapper, and types
+  - OpenAI service integration with configurable model parameters (GPT-3.5-turbo, 150 tokens, 0.7 temperature)
+  - Secure server-side processing ensuring correct answers never reach the frontend
+  - RESTful API endpoint `POST /api/ai/hint` with comprehensive request validation
+  - TypeScript interfaces for `AIHintRequest`, `AIHintResponse`, and `ProblemContext`
+- **Environment Configuration**:
+  - Added `OPENAI_API_KEY` environment variable to both `.env` and `.env.example`
+  - OpenAI API key configuration documentation with setup instructions
+  - Environment variable validation and error handling for missing API keys
+- **Enhanced Documentation**:
+  - Comprehensive AI hint system documentation in server README
+  - API usage examples with realistic request/response scenarios
+  - Troubleshooting section for AI-specific issues and solutions
+  - Security considerations and implementation details
+  - Usage examples for different problem types (multiple choice, input, fractions)
+
+### Changed
+
+- **Module System**:
+  - Updated main modules export (`src/modules/index.ts`) to include AI module
+  - Added AI routes to main Express application with proper middleware integration
+  - Enhanced server architecture documentation to include AI module structure
+- **API Architecture**:
+  - Extended API endpoint documentation to include AI hint endpoint
+  - Added AI module to project structure documentation with file descriptions
+  - Updated key features list to highlight AI-powered learning assistance
+- **Dependencies**:
+  - Added OpenAI package (`openai@^5.12.2`) to server dependencies
+  - Updated package.json with OpenAI integration for AI-powered features
+
+### Security
+
+- **Answer Protection**:
+  - AI hint system maintains server-side security by never exposing correct answers to frontend
+  - Database queries for problem context exclude sensitive information from API responses
+  - Secure prompt engineering prevents AI from revealing answers while providing helpful guidance
+  - Input validation and sanitization for all AI hint requests to prevent injection attacks
+
+### Technical Details
+
+- **AI Service Features**:
+  - Contextual problem analysis including question text, user answer, and available options
+  - Normalized answer comparison for accurate correctness detection
+  - Teen-friendly system prompts optimizing for encouraging, educational responses
+  - Token optimization (150 max tokens) ensuring concise, focused hints
+  - Temperature setting (0.7) balancing creativity with consistency
+- **Error Handling**:
+  - Comprehensive error handling for OpenAI API failures with meaningful user feedback
+  - Graceful degradation with encouraging generic hints when AI service is unavailable
+  - Database error handling for problem context retrieval with proper error messages
+  - Request validation ensuring all required parameters are present and properly formatted
+
 ## [2025-08-11] - Problem Summary & Security Enhancements
 
 ### Added
