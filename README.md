@@ -2,7 +2,7 @@
 
 A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for interactive mathematics education with gamification features.
 
-## License
+## ⚖️ License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
@@ -14,6 +14,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 - **Progress Tracking**: XP system with animated progress reveals
 - **Streak System**: Daily learning streaks with bonus rewards
 - **Results Analytics**: Comprehensive performance metrics and celebrations
+- **Profile/Stats Dashboard**: Personal progress tracking with achievements and statistics
 - **Responsive Design**: Mobile-first approach with modern UI/UX
 
 ### Gamification Elements
@@ -55,7 +56,8 @@ interactive-math-learning-app/
 │   │   ├── pages/             # Page components
 │   │   │   ├── LessonPage.tsx      # Main lesson interface
 │   │   │   ├── LessonInterface.tsx # Data bridge orchestrator
-│   │   │   └── ResultsPage.tsx     # Results display with animations
+│   │   │   ├── ResultsPage.tsx     # Results display with animations
+│   │   │   └── ProfilePage.tsx     # Profile/stats dashboard
 │   │   ├── services/          # API integration
 │   │   └── types/             # TypeScript interfaces
 │   ├── package.json
@@ -137,6 +139,7 @@ interactive-math-learning-app/
 2. **Complete Problems**: Solve interactive math problems with instant feedback
 3. **Track Progress**: Monitor XP gains and streak status
 4. **View Results**: See detailed performance analytics after each lesson
+5. **Check Profile**: Review personal statistics, achievements, and overall progress
 
 ### For Developers
 
@@ -211,12 +214,12 @@ npx prisma migrate reset
 
 ### Submissions
 
-- `POST /api/submissions` - Submit lesson answers
+- `POST /api/lessons/:id/submit` - Submit lesson answers
 - `GET /api/submissions/:userId` - Get user submission history
 
-### Progress
+### Profile
 
-- `GET /api/progress/:userId` - Get user progress and streaks
+- `GET /api/profile/:userId` - Get user profile stats and achievements
 
 ## 🎨 UI/UX Features
 
@@ -226,6 +229,13 @@ npx prisma migrate reset
 - **Performance Celebrations**: Dynamic emojis and colors based on scores
 - **Streak Tracking**: Visual streak status with bonus indicators
 - **Progress Analytics**: Detailed breakdown of lesson performance
+
+### Profile/Stats Dashboard
+
+- **Comprehensive Statistics**: Total XP, current streak, best streak, and progress percentages
+- **Achievement System**: Unlockable badges based on learning milestones
+- **Visual Progress**: Animated progress bars and level indicators
+- **Activity Tracking**: Last activity dates and motivational messaging
 
 ### Responsive Design
 
@@ -243,7 +253,7 @@ npx prisma migrate reset
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -263,3 +273,92 @@ For support and questions:
 ---
 
 Built with ❤️ using the PERN stack for interactive mathematics education.
+
+---
+
+## 👨🏻‍💻 Tech Lead Focus Areas
+
+### 1. Team Development Strategy
+
+#### Codebase Structure for 2–3 Developers
+
+- `client/` → Frontend (React) — separate feature folders per module (lessons/, problems/, users/)
+
+- `server/` → Backend API (Express) — modular structure by domain:
+
+```bash
+server/
+  src/
+    modules/
+      lessons/
+      problems/
+      users/
+      submissions/
+    common/
+    prisma/
+```
+
+- Database Migrations handled in prisma/ (single source of truth)
+- Feature Branches — each developer owns 1–2 features at a time
+
+#### Git Workflow & Code Review Process (Trunk-Based Development)
+
+- **Single main branch** — always production-ready.
+- Developers branch from `master` for small, short-lived features (`feature/lesson-progress`, `fix/option-rendering`).
+- Commit **small**, **atomic** changes multiple times a day.
+- Open a PR into main as soon as the feature is functional (often within hours, never more than 1–2 days).
+- Merge only after:
+  - Passing automated tests & linting
+  - Peer review approval
+
+#### Code Review
+
+- Reviews happen quickly (within 1–4 hours) to keep work flowing.
+- Focus areas:
+  - Maintainability & readability
+  - Consistent coding standards (ESLint, Prettier, StyleCop)
+  - Adequate test coverage
+- Encourage pair reviews for tricky changes.
+
+#### Merge Conflict Prevention
+
+- Keep branches alive for <2 days
+- Pull `master` frequently before pushing
+- Use clear ownership of files/folders
+- Automate formatting to eliminate style-related conflicts
+
+### 2. AI/ML Integration Strategy
+
+#### Where to Integrate
+
+- **Adaptive Lesson Recommendation** — Suggest next lessons based on accuracy, time-to-answer, and hint usage.
+- **AI-Generated Hints** — LLM generates short, teen-friendly hints for wrong answers.
+- **Dynamic Problem Generation** — Create new problems in topics where the student struggles.
+
+#### Data to Collect
+
+| Data                        | Purpose                         |
+| --------------------------- | ------------------------------- |
+| `topic`, `difficulty_level` | Adjust challenge level          |
+| `is_correct`, `user_answer` | Detect misconceptions           |
+| `time_to_answer_ms`         | Measure engagement & confidence |
+| `hint_requested`            | Track reliance on AI assistance |
+| `attempt_id`                | Group problems into sessions    |
+| `accuracy per topic`        | Feed recommendation engine      |
+
+#### How to Use the Data
+
+- Short-term: Rule-based recommendations
+- Medium-term: ML classification to predict probability of success
+- Long-term: Reinforcement Learning to optimize lesson paths
+
+### 3. Technical Communication
+
+**Complex Decision:** Choosing Prisma ORM over raw SQL
+
+- **Business Impact**: Faster development & fewer database bugs → shorter time-to-market
+- **Trade-offs**: Slight overhead in complex queries vs raw SQL
+- **Timeline**:
+  - Setup & migrations → <1 day
+  - Initial models → <2 hours
+  - Faster onboarding for new devs → reduces future training cost

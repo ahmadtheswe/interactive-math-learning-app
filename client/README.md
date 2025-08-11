@@ -56,6 +56,7 @@ client/
 │   │   ├── LessonPage.tsx          # Main lesson solving interface
 │   │   ├── LessonsPage.tsx         # Lessons overview page
 │   │   ├── NotFoundPage.tsx        # 404 error page
+│   │   ├── ProfilePage.tsx         # Profile/stats dashboard
 │   │   └── ResultsPage.tsx         # 🎉 Results with animations
 │   ├── services/                # API integration layer
 │   │   └── api.ts                  # HTTP client and API calls
@@ -150,6 +151,16 @@ The main lesson interface where students:
 - Solve interactive math problems with instant feedback
 - Submit answers through the data bridge pattern
 - Experience seamless transitions to results
+
+### ProfilePage.tsx - Personal Statistics Dashboard 👤
+
+Comprehensive profile interface that displays:
+
+- **Total XP and Level Progress**: Animated XP counters with level indicators
+- **Streak Tracking**: Current and best streak visualization with motivational elements
+- **Achievement System**: Unlockable badges based on learning milestones
+- **Progress Analytics**: Overall completion percentage and lesson statistics
+- **Activity History**: Last activity tracking with human-readable time formatting
 
 ## 🔧 Development Best Practices
 

@@ -1,4 +1,12 @@
-## P### Initial Setup and Migration
+# Interactive Math Learning App - Server
+
+The Express.js backend server for the Interactive Math Learning App, built with TypeScript and Prisma ORM.
+
+## 🗄️ Database Setup and Migration
+
+This section covers how to set up your database using Prisma. Make sure your database is running before executing these commands.
+
+### Initial Setup and Migration
 
 1. Generate the migration files:
 
