@@ -1,4 +1,7 @@
-import { env } from "../config/env";
+// Direct access to Vite environment variables
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
 import type {
   LessonsResponse,
   LessonDetailResponse,
@@ -8,8 +11,6 @@ import type {
   ProfileStatsResponse,
   AIHintResponse,
 } from "../types";
-
-const API_BASE_URL = env.API_BASE_URL;
 
 export const api = {
   // Lessons API

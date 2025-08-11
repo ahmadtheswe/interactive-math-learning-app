@@ -397,7 +397,7 @@ if (daysDifference === 0) {
 
 **OpenAI Integration**:
 
-- **Model**: GPT-3.5-turbo for cost-effective, fast responses
+- **Model**: Configurable via `OPENAI_MODEL` environment variable (defaults to GPT-3.5-turbo)
 - **Context-Aware**: Includes problem details, user answer, and available options
 - **Token Limit**: 150 tokens max to keep hints concise and focused
 - **Temperature**: 0.7 for balanced creativity and consistency
@@ -414,15 +414,20 @@ if (daysDifference === 0) {
 **Required Environment Variables**:
 
 ```env
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
+
 # OpenAI API Configuration
 OPENAI_API_KEY="your_openai_api_key_here"
+OPENAI_MODEL="gpt-3.5-turbo"  # Optional, defaults to gpt-3.5-turbo
 ```
 
 **Setup Instructions**:
 
 1. Obtain OpenAI API key from https://platform.openai.com/
-2. Add key to both `.env` and `.env.example` files
+2. Add key and optional model selection to both `.env` and `.env.example` files
 3. Ensure sufficient API credits for hint generation
+4. Model selection is configurable via `OPENAI_MODEL` environment variable
 
 ### Hint Generation Logic
 

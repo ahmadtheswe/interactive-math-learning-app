@@ -114,21 +114,19 @@ client/
 
 ## 🔧 Environment Configuration
 
-The application uses environment variables for configuration. Copy `.env.example` to `.env` and adjust values as needed:
+The application uses Vite's built-in environment variable system. Copy `.env.example` to `.env` and adjust values as needed:
 
 ```env
 # API Configuration
 VITE_API_BASE_URL=http://localhost:5000/api
-
-# Application Settings
-VITE_APP_TITLE=Interactive Math Learning App
-VITE_APP_VERSION=1.0.0
-
-# Environment
-NODE_ENV=development
 ```
 
-**Important**: All client-side environment variables must be prefixed with `VITE_` to be accessible in the browser.
+**Key Points:**
+
+- **Vite Built-in**: No need for separate dotenv package - Vite handles `.env` files automatically
+- **VITE\_ Prefix**: All client-side environment variables must be prefixed with `VITE_` for security
+- **Direct Access**: Use `import.meta.env.VITE_API_BASE_URL` to access environment variables
+- **Simplified Setup**: Removed wrapper configuration files for cleaner implementation
 
 ## 🎯 Key Components Explained
 
@@ -168,12 +166,14 @@ Receives data via navigation state and presents:
 - **Performance Celebrations**: Dynamic emojis and colors based on scores
 - **Streak Tracking**: Visual streak status with bonus indicators
 - **Progress Analytics**: Detailed breakdown of lesson performance
+- **AI Hint Integration**: Interactive hint buttons with loading states and visual feedback
 
 ### LessonPage.tsx - Interactive Problem Solving 📚
 
 The main lesson interface where students:
 
 - Solve interactive math problems with instant feedback
+- Request AI-powered hints for incorrect answers with teen-friendly language
 - Submit answers through the data bridge pattern
 - Experience seamless transitions to results
 
@@ -186,6 +186,30 @@ Comprehensive profile interface that displays:
 - **Achievement System**: Unlockable badges based on learning milestones
 - **Progress Analytics**: Overall completion percentage and lesson statistics
 - **Activity History**: Last activity tracking with human-readable time formatting
+
+#### Achievement System Architecture 🏆
+
+The achievement system uses **calculated achievements** rather than persistent storage:
+
+**Data Flow:**
+
+```
+Database (User Stats) → ProfileService → ProfileMapper → Frontend Logic → Achievement Display
+```
+
+**Achievement Sources:**
+
+- **First Steps** (🎯): `completedLessons > 0` - from `UserProgress.completed` count
+- **Week Warrior** (🔥): `bestStreak >= 7` - from `User.bestStreak` field
+- **XP Master** (💎): `totalXp >= 1000` - from `User.totalXp` field
+- **Champion** (👑): `progressPercentage >= 100` - from averaged `UserProgress.progressPercent`
+
+**Implementation Details:**
+
+- **No achievements table**: Achievements calculated dynamically on each profile load
+- **Frontend logic**: Achievement unlocking determined by conditional rendering
+- **Real-time updates**: Achievements automatically reflect current user statistics
+- **Scalable pattern**: Easy to add new achievements by extending the criteria logic
 
 ## 🔧 Development Best Practices
 
@@ -214,9 +238,10 @@ const resultsData = location.state?.resultsData;
 
 The frontend communicates with the backend through:
 
-- **RESTful endpoints** for lessons and submissions
-- **Centralized API client** in `services/api.ts`
-- **Type-safe interfaces** defined in `types/index.ts`
+- **RESTful endpoints** for lessons, submissions, and AI hints
+- **Centralized API client** in `services/api.ts` with full TypeScript type safety
+- **Type-safe interfaces** defined in `types/index.ts` (eliminated all `any` types)
+- **OpenAI Integration** for AI-powered hint generation
 
 ## 🎨 Styling & UI
 

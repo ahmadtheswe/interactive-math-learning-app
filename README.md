@@ -7,6 +7,7 @@ A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for
 ### Core Functionality
 
 - **Interactive Lessons**: Dynamic math problems with instant feedback
+- **AI-Powered Hints**: Intelligent, teen-friendly hints for incorrect answers using OpenAI GPT-3.5-turbo
 - **Progress Tracking**: XP system with animated progress reveals
 - **Streak System**: Daily learning streaks with bonus rewards
 - **Results Analytics**: Comprehensive performance metrics and celebrations
@@ -32,7 +33,9 @@ A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for
 ### Backend (Node.js + Express)
 
 - **Express.js** server with TypeScript
+- **Modular Architecture** with domain-based organization (AI, Profile, Lessons, Submissions)
 - **Prisma ORM** with PostgreSQL database
+- **AI Integration** with OpenAI GPT-3.5-turbo for intelligent hint generation
 - **Global database configuration** with optimized transaction timeouts
 - **RESTful API** design with comprehensive error handling
 
@@ -60,9 +63,14 @@ interactive-math-learning-app/
 │   └── vite.config.ts
 ├── server/                     # Express backend
 │   ├── src/
+│   │   ├── modules/           # Business domain modules
+│   │   │   ├── ai/                # AI hint system with OpenAI integration
+│   │   │   ├── profile/           # User profile and statistics
+│   │   │   ├── lessons/           # Lesson management
+│   │   │   └── submissions/       # Answer submission and grading
+│   │   ├── routes/            # API route definitions
 │   │   ├── db.ts              # Global Prisma client configuration
-│   │   ├── index.ts           # Server entry point
-│   │   └── services/          # Business logic services
+│   │   └── index.ts           # Server entry point
 │   ├── package.json
 │   └── tsconfig.json
 └── README.md
@@ -94,7 +102,8 @@ interactive-math-learning-app/
 
    ```bash
    cp env.example .env
-   # Edit .env with your database configuration
+   # Edit .env with your database and OpenAI API configuration
+   # Required: DATABASE_URL, OPENAI_API_KEY
    ```
 
 4. Run database migrations:
@@ -133,9 +142,10 @@ interactive-math-learning-app/
 
 1. **Access Lessons**: Navigate to available math lessons
 2. **Complete Problems**: Solve interactive math problems with instant feedback
-3. **Track Progress**: Monitor XP gains and streak status
-4. **View Results**: See detailed performance analytics after each lesson
-5. **Check Profile**: Review personal statistics, achievements, and overall progress
+3. **Get AI Hints**: Request intelligent, personalized hints for incorrect answers
+4. **Track Progress**: Monitor XP gains and streak status
+5. **View Results**: See detailed performance analytics after each lesson
+6. **Check Profile**: Review personal statistics, achievements, and overall progress
 
 ### For Developers
 
@@ -216,6 +226,10 @@ npx prisma migrate reset
 ### Profile
 
 - `GET /api/profile/:userId` - Get user profile stats and achievements
+
+### AI Hints
+
+- `POST /api/ai/hint` - Get AI-generated hints for incorrect answers
 
 ## 🎨 UI/UX Features
 
@@ -328,7 +342,7 @@ server/
 #### Where to Integrate
 
 - **Adaptive Lesson Recommendation** — Suggest next lessons based on accuracy, time-to-answer, and hint usage.
-- **AI-Generated Hints** — LLM generates short, teen-friendly hints for wrong answers.
+- **AI-Generated Hints** — ✅ **IMPLEMENTED**: LLM generates short, teen-friendly hints for wrong answers using OpenAI GPT-3.5-turbo.
 - **Dynamic Problem Generation** — Create new problems in topics where the student struggles.
 
 #### Data to Collect
