@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { LessonWithDetails, SubmissionAnswer } from "../types";
+import type {
+  LessonWithDetails,
+  SubmissionAnswer,
+  ProblemResult,
+} from "../types";
 import { api } from "../services/api";
 import ProblemCard from "./ProblemCard";
 
@@ -113,6 +117,7 @@ export default function LessonInterface({
           previousXp: response.data.previousXp || 0,
           newXp: response.data.user.totalXp || 0,
           lessonTitle: lesson.title,
+          lessonId: lessonId, // Add lessonId for hint API
           perfectScore:
             (response.data.results.correctAnswers || 0) ===
             lesson.problems.length,
@@ -124,7 +129,7 @@ export default function LessonInterface({
             // Get correctness from server response
             // The server returns detailed results for each problem
             const problemResult = response.data.results.problemResults?.find(
-              (result: any) => result.problemId === problem.id
+              (result: ProblemResult) => result.problemId === problem.id
             );
 
             return {

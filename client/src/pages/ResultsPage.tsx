@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isValidUUID } from "../utils/uuid";
+import { api } from "../services/api";
 
 interface ProblemResult {
   id: number;
@@ -21,6 +22,7 @@ interface ResultsData {
   previousXp: number;
   newXp: number;
   lessonTitle: string;
+  lessonId?: number; // Add lessonId for hint API
   perfectScore?: boolean;
   improvements?: string[];
   attemptId?: string; // Add attemptId to results data
@@ -33,6 +35,10 @@ export default function ResultsPage() {
   const [showXpAnimation, setShowXpAnimation] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [animatedXp, setAnimatedXp] = useState(0);
+  const [hints, setHints] = useState<{ [problemId: number]: string }>({});
+  const [loadingHints, setLoadingHints] = useState<{
+    [problemId: number]: boolean;
+  }>({});
 
   // Get results data from navigation state or default values
   const resultsData: ResultsData = location.state?.resultsData || {
@@ -54,6 +60,7 @@ export default function ResultsPage() {
     streakBonusXp = 0,
     newXp,
     lessonTitle,
+    lessonId,
     perfectScore = false,
     improvements = [],
     attemptId,
@@ -136,6 +143,38 @@ export default function ResultsPage() {
       return "Excellent work! Keep up the amazing progress!";
     if (scorePercent >= 70) return "Great job! You're getting stronger!";
     return "Good effort! Every mistake is a step towards mastery!";
+  };
+
+  const handleGetHint = async (problemId: number, userAnswer: string) => {
+    if (!lessonId) {
+      alert("Unable to get hint: lesson information is missing.");
+      return;
+    }
+
+    setLoadingHints((prev) => ({ ...prev, [problemId]: true }));
+
+    try {
+      const response = await api.getHint(lessonId, problemId, userAnswer);
+
+      if (response.success) {
+        setHints((prev) => ({ ...prev, [problemId]: response.data.hint }));
+      } else {
+        setHints((prev) => ({
+          ...prev,
+          [problemId]:
+            "Sorry, I couldn't generate a hint right now. Try reviewing the problem again!",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching hint:", error);
+      setHints((prev) => ({
+        ...prev,
+        [problemId]:
+          "Sorry, there was an error getting your hint. Please try again later.",
+      }));
+    } finally {
+      setLoadingHints((prev) => ({ ...prev, [problemId]: false }));
+    }
   };
 
   return (
@@ -384,10 +423,43 @@ export default function ResultsPage() {
 
                   {!result.isCorrect && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <button className="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                        <span className="text-base mr-1">💡</span>
-                        Get Hint
-                      </button>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() =>
+                            handleGetHint(result.id, result.userAnswer)
+                          }
+                          disabled={
+                            loadingHints[result.id] || !!hints[result.id]
+                          }
+                          className="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="text-base mr-1">💡</span>
+                          {loadingHints[result.id] ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                              Getting Hint...
+                            </>
+                          ) : hints[result.id] ? (
+                            "Hint Generated"
+                          ) : (
+                            "Get Hint"
+                          )}
+                        </button>
+
+                        {hints[result.id] && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                            <div className="flex items-start">
+                              <span className="text-blue-600 mr-2 flex-shrink-0">
+                                💡
+                              </span>
+                              <div className="text-blue-800 text-sm">
+                                <p className="font-medium mb-1">Hint:</p>
+                                <p>{hints[result.id]}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -71,17 +71,29 @@ export interface SubmissionRequest {
   answers: SubmissionAnswer[];
 }
 
+export interface SubmissionData {
+  attemptId: string;
+  answers: SubmissionAnswer[];
+}
+
+export interface ProblemResult {
+  problemId: number;
+  isCorrect: boolean;
+  xpAwarded: number;
+}
+
 export interface SubmissionResult {
   correctAnswers: number;
   totalAnswers: number;
   totalXpAwarded: number;
+  xpAwarded: number; // Alias for totalXpAwarded for consistency
   streakCount?: number;
   isNewStreak?: boolean;
   streakBonusXp?: number;
   previousXp?: number;
   newXp?: number;
   improvements?: string[];
-  results?: any; // For backward compatibility
+  problemResults?: ProblemResult[]; // Properly typed problem results
 }
 
 export interface UserProfileStats {
@@ -97,4 +109,45 @@ export interface UserProfileStats {
 export interface ProfileStatsResponse {
   success: true;
   data: UserProfileStats;
+}
+
+export interface UpdateProgressResponse {
+  success: true;
+  data: {
+    id: number;
+    userId: number;
+    lessonId: number;
+    problemsCompleted: number;
+    totalProblems: number;
+    progressPercent: number;
+    completed: boolean;
+    lastAttemptAt: string | null;
+  };
+}
+
+export interface SubmissionResponse {
+  success: true;
+  data: {
+    results: SubmissionResult;
+    user: {
+      totalXp: number;
+      currentStreak: number;
+    };
+    isNewStreak: boolean;
+    streakBonusXp: number;
+    previousXp: number;
+  };
+}
+
+export interface AIHintResponse {
+  success: true;
+  data: {
+    hint: string;
+    problemQuestion?: string;
+  };
+}
+
+export interface APIErrorResponse {
+  success: false;
+  error: string;
 }
