@@ -1,5 +1,5 @@
 // Database query result types
-import { LessonProblemReference } from './lesson.types';
+import { LessonProblemReference } from './lesson.model';
 
 export interface LessonFromDatabase {
   id: number;

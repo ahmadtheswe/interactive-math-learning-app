@@ -1,4 +1,5 @@
-export * from './service';
-export * from './handler';
-export * from './mapper';
-export * from './types';
+import './container';
+export * from './services/profile-service';
+export * from './handlers/profile-handler';
+export * from './mapper/mapper';
+export * from './models';

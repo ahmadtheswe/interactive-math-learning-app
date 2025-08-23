@@ -1,6 +1,6 @@
 // Lesson interfaces
-import { Problem } from './problem.types';
-import { UserProgress } from './progress.types';
+import { Problem } from './problem.model';
+import { UserProgress } from './progress.model';
 
 export interface LessonWithProgress {
   id: number;

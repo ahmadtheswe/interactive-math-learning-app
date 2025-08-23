@@ -1,9 +1,12 @@
-import { prisma } from "../../db";
-import { UserProfileStats, UserProfile } from "./types";
-import { ProfileMapper } from "./mapper";
+import { prisma } from '../../../db';
+import { UserProfileStats, UserProfile } from '../models';
+import { IProfileService } from '../interfaces/profile-service-interface';
+import { injectable } from 'tsyringe';
+import { ProfileMapper } from '../mapper/mapper';
 
-export class ProfileService {
-  static async getUserStats(userId: number): Promise<UserProfileStats | null> {
+@injectable()
+export class ProfileService implements IProfileService {
+  async getUserStats(userId: number): Promise<UserProfileStats | null> {
     try {
       // Get user basic stats
       const user = await prisma.user.findUnique({
@@ -33,18 +36,14 @@ export class ProfileService {
       const totalLessons = await prisma.lesson.count();
 
       // Use mapper to transform data
-      return ProfileMapper.toUserProfileStats(
-        user,
-        userProgresses,
-        totalLessons
-      );
+      return ProfileMapper.toUserProfileStats(user, userProgresses, totalLessons);
     } catch (error) {
-      console.error("Error fetching user stats:", error);
-      throw new Error("Failed to fetch user statistics");
+      console.error('Error fetching user stats:', error);
+      throw new Error('Failed to fetch user statistics');
     }
   }
 
-  static async getUserById(userId: number): Promise<UserProfile | null> {
+  async getUserById(userId: number): Promise<UserProfile | null> {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -62,8 +61,8 @@ export class ProfileService {
 
       return user ? ProfileMapper.toUserProfile(user) : null;
     } catch (error) {
-      console.error("Error fetching user:", error);
-      throw new Error("Failed to fetch user");
+      console.error('Error fetching user:', error);
+      throw new Error('Failed to fetch user');
     }
   }
 }

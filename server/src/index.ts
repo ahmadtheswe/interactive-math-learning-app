@@ -1,4 +1,6 @@
 import "reflect-metadata";
+// Import container first to ensure all dependencies are registered
+import "./container";
 
 import express from "express";
 import cors from "cors";

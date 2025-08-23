@@ -48,17 +48,16 @@ export interface LessonWithDetails {
   userProgress: UserProgress;
 }
 
-export interface LessonsResponse {
-  success: true;
-  data: {
+export interface LessonsResponse
+  extends ApiResponse<{
     lessons: Lesson[];
     userId: number;
-  };
+  }> {
+  readonly _type?: 'LessonsResponse';
 }
 
-export interface LessonDetailResponse {
-  success: true;
-  data: LessonWithDetails;
+export interface LessonDetailResponse extends ApiResponse<LessonWithDetails> {
+  readonly _type?: 'LessonDetailResponse';
 }
 
 export interface SubmissionAnswer {
@@ -106,14 +105,12 @@ export interface UserProfileStats {
   lastActivityDate: string | null;
 }
 
-export interface ProfileStatsResponse {
-  success: true;
-  data: UserProfileStats;
+export interface ProfileStatsResponse extends ApiResponse<UserProfileStats> {
+  readonly _type?: 'ProfileStatsResponse';
 }
 
-export interface UpdateProgressResponse {
-  success: true;
-  data: {
+export interface UpdateProgressResponse
+  extends ApiResponse<{
     id: number;
     userId: number;
     lessonId: number;
@@ -122,12 +119,12 @@ export interface UpdateProgressResponse {
     progressPercent: number;
     completed: boolean;
     lastAttemptAt: string | null;
-  };
+  }> {
+  readonly _type?: 'UpdateProgressResponse';
 }
 
-export interface SubmissionResponse {
-  success: true;
-  data: {
+export interface SubmissionResponse
+  extends ApiResponse<{
     results: SubmissionResult;
     user: {
       totalXp: number;
@@ -136,18 +133,28 @@ export interface SubmissionResponse {
     isNewStreak: boolean;
     streakBonusXp: number;
     previousXp: number;
-  };
+  }> {
+  readonly _type?: 'SubmissionResponse';
 }
 
-export interface AIHintResponse {
-  success: true;
-  data: {
+export interface AIHintResponse
+  extends ApiResponse<{
     hint: string;
     problemQuestion?: string;
-  };
+  }> {
+  readonly _type?: 'AIHintResponse';
+}
+
+// Generic API response type that can be either success or error
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
 export interface APIErrorResponse {
   success: false;
   error: string;
+  message?: string;
 }

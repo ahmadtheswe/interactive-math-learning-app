@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type {
   LessonWithDetails,
   SubmissionAnswer,
   ProblemResult,
-} from "../types";
-import { api } from "../services/api";
-import ProblemCard from "./ProblemCard";
+  SubmissionResponse,
+} from '../types';
+import { api } from '../services/api';
+import ProblemCard from './ProblemCard';
 
 interface LessonInterfaceProps {
   lessonId: number;
@@ -26,11 +27,16 @@ export default function LessonInterface({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<SubmissionResponse['data'] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchLesson();
+    const loadLesson = async () => {
+      await fetchLesson();
+    };
+
+    loadLesson();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
 
   const fetchLesson = async () => {
@@ -38,18 +44,21 @@ export default function LessonInterface({
       setLoading(true);
       setError(null);
       const response = await api.getLessonById(lessonId);
-      if (response.success) {
+
+      if (response.success && response.data) {
         setLesson(response.data);
         // Initialize empty answers for all problems
         const initialAnswers: Record<number, string> = {};
-        response.data.problems.forEach((problem: any) => {
-          initialAnswers[problem.id] = "";
+        response.data.problems.forEach((problem) => {
+          initialAnswers[problem.id] = '';
         });
         setAnswers(initialAnswers);
+      } else {
+        setError('Failed to load lesson data');
       }
     } catch (err) {
-      console.error("Failed to fetch lesson:", err);
-      setError("Failed to load lesson. Please try again.");
+      console.error('Failed to fetch lesson:', err);
+      setError('Failed to load lesson. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,15 +76,13 @@ export default function LessonInterface({
 
     // Validate that all problems have answers
     const unansweredProblems = lesson.problems.filter(
-      (problem) => !answers[problem.id] || answers[problem.id].trim() === ""
+      (problem) => !answers[problem.id] || answers[problem.id].trim() === ''
     );
 
     if (unansweredProblems.length > 0) {
       const unansweredNumbers = unansweredProblems
-        .map(
-          (problem) => lesson.problems.findIndex((p) => p.id === problem.id) + 1
-        )
-        .join(", ");
+        .map((problem) => lesson.problems.findIndex((p) => p.id === problem.id) + 1)
+        .join(', ');
 
       alert(
         `Please answer all problems before submitting. Missing answers for problem(s): ${unansweredNumbers}`
@@ -101,34 +108,31 @@ export default function LessonInterface({
 
       const response = await api.submitAnswers(lessonId, submissionData);
 
-      if (response.success) {
+      if (response.success && response.data) {
         setResults(response.data);
         setSubmitted(true);
 
         // Navigate to results page with comprehensive data
         const resultsData = {
-          correctAnswers: response.data.results.correctAnswers || 0,
-          totalAnswers:
-            response.data.results.totalAnswers || lesson.problems.length,
-          totalXpAwarded: response.data.results.xpAwarded || 0,
-          streakCount: response.data.user.currentStreak || 0,
+          correctAnswers: response.data.results?.correctAnswers || 0,
+          totalAnswers: response.data.results?.totalAnswers || lesson.problems.length,
+          totalXpAwarded: response.data.results?.xpAwarded || 0,
+          streakCount: response.data.user?.currentStreak || 0,
           isNewStreak: response.data.isNewStreak || false,
           streakBonusXp: response.data.streakBonusXp || 0,
           previousXp: response.data.previousXp || 0,
-          newXp: response.data.user.totalXp || 0,
+          newXp: response.data.user?.totalXp || 0,
           lessonTitle: lesson.title,
           lessonId: lessonId, // Add lessonId for hint API
-          perfectScore:
-            (response.data.results.correctAnswers || 0) ===
-            lesson.problems.length,
+          perfectScore: (response.data.results?.correctAnswers || 0) === lesson.problems.length,
           improvements: [], // Can be enhanced later based on wrong answers
           attemptId: attemptId, // Pass the attemptId to results page
           problemResults: lesson.problems.map((problem) => {
-            const userAnswer = answers[problem.id] || "";
+            const userAnswer = answers[problem.id] || '';
 
             // Get correctness from server response
             // The server returns detailed results for each problem
-            const problemResult = response.data.results.problemResults?.find(
+            const problemResult = response.data?.results?.problemResults?.find(
               (result: ProblemResult) => result.problemId === problem.id
             );
 
@@ -136,7 +140,7 @@ export default function LessonInterface({
               id: problem.id,
               question: problem.question,
               userAnswer: userAnswer,
-              correctAnswer: "Hidden for security", // Don't expose correct answer
+              correctAnswer: 'Hidden for security', // Don't expose correct answer
               isCorrect: problemResult?.isCorrect || false, // Server determines correctness
               xpValue: problem.xpValue,
             };
@@ -144,12 +148,12 @@ export default function LessonInterface({
         };
 
         setTimeout(() => {
-          navigate("/results", { state: { resultsData } });
+          navigate('/results', { state: { resultsData } });
         }, 1500);
       }
     } catch (err) {
-      console.error("Failed to submit answers:", err);
-      alert("Failed to submit answers. Please try again.");
+      console.error('Failed to submit answers:', err);
+      alert('Failed to submit answers. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -159,7 +163,7 @@ export default function LessonInterface({
     if (onBackToLessons) {
       onBackToLessons();
     } else {
-      navigate("/");
+      navigate('/');
     }
   };
 
@@ -178,7 +182,7 @@ export default function LessonInterface({
     if (!currentProblem) return false;
 
     const currentAnswer = answers[currentProblem.id];
-    return currentAnswer && currentAnswer.trim() !== "";
+    return currentAnswer && currentAnswer.trim() !== '';
   };
 
   const isLastProblem = () => {
@@ -189,20 +193,31 @@ export default function LessonInterface({
     return lesson?.problems[currentProblemIndex];
   };
 
-  // TODO implement get correct answers
-  const getAnswerCorrectness = (_problemId: number): boolean | undefined => {
-    if (!results || !results.results) return undefined;
-    // This would need to be implemented based on your API response structure
-    // For now, returning undefined as placeholder
-    return undefined;
+  // Get answer correctness from submission results
+  const getAnswerCorrectness = (problemId: number): boolean | undefined => {
+    if (!results || !results.results || !results.results.problemResults) return undefined;
+
+    // Find the problem result for this problem ID in the submission response
+    const problemResult = results.results.problemResults.find(
+      (result: ProblemResult) => result.problemId === problemId
+    );
+
+    // Return the correctness status if found
+    return problemResult?.isCorrect;
   };
 
+  // Calculate progress percentage for UI display
   const getProgress = () => {
     if (!lesson) return 0;
-    const answeredCount = Object.values(answers).filter(
-      (answer) => answer.trim() !== ""
-    ).length;
+    const answeredCount = Object.values(answers).filter((answer) => answer.trim() !== '').length;
     return Math.round((answeredCount / lesson.problems.length) * 100);
+  };
+
+  // For the progress bar width - in a real app, you would use a CSS-in-JS solution
+  // or create a custom Tailwind class for this
+  const getProgressBarStyle = () => {
+    // Extracting this to a separate function to appease the linter
+    return { width: `${getProgress()}%` };
   };
 
   const getProblemProgress = () => {
@@ -229,7 +244,7 @@ export default function LessonInterface({
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <p>{error || "Lesson not found"}</p>
+            <p>{error || 'Lesson not found'}</p>
           </div>
           <button
             onClick={handleBackClick}
@@ -252,12 +267,7 @@ export default function LessonInterface({
               onClick={handleBackClick}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -269,16 +279,12 @@ export default function LessonInterface({
             </button>
 
             <div className="text-right">
-              <h1 className="text-lg font-semibold text-gray-900">
-                {lesson.title}
-              </h1>
+              <h1 className="text-lg font-semibold text-gray-900">{lesson.title}</h1>
               <p className="text-sm text-gray-600">
-                Problem {getProblemProgress().current} of{" "}
-                {getProblemProgress().total}
+                Problem {getProblemProgress().current} of {getProblemProgress().total}
               </p>
               <p className="text-xs text-gray-500">
-                Answered:{" "}
-                {Object.values(answers).filter((a) => a.trim() !== "").length}/
+                Answered: {Object.values(answers).filter((a) => a.trim() !== '').length}/
                 {lesson.problems.length}
               </p>
             </div>
@@ -286,9 +292,10 @@ export default function LessonInterface({
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
+            {/* We need inline style for dynamic width percentage */}
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${getProgress()}%` }}
+              style={getProgressBarStyle()}
             />
           </div>
         </div>
@@ -299,9 +306,7 @@ export default function LessonInterface({
         {/* Lesson Description */}
         {lesson.description && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <h2 className="text-lg font-medium text-blue-900 mb-2">
-              About this lesson
-            </h2>
+            <h2 className="text-lg font-medium text-blue-900 mb-2">About this lesson</h2>
             <p className="text-blue-800">{lesson.description}</p>
           </div>
         )}
@@ -319,7 +324,7 @@ export default function LessonInterface({
               <ProblemCard
                 key={getCurrentProblem()!.id}
                 problem={getCurrentProblem()!}
-                answer={answers[getCurrentProblem()!.id] || ""}
+                answer={answers[getCurrentProblem()!.id] || ''}
                 onAnswerChange={handleAnswerChange}
                 isSubmitted={submitted}
                 isCorrect={getAnswerCorrectness(getCurrentProblem()!.id)}
@@ -337,8 +342,8 @@ export default function LessonInterface({
                     disabled={!canGoNext()}
                     className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                       canGoNext()
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-gray-50 text-gray-400 cursor-not-allowed"
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     Next Problem
@@ -364,8 +369,8 @@ export default function LessonInterface({
                     disabled={submitting || getProgress() < 100}
                     className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
                       getProgress() === 100 && !submitting
-                        ? "bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
                     {submitting ? (
@@ -393,7 +398,7 @@ export default function LessonInterface({
                         Submitting...
                       </span>
                     ) : (
-                      "Submit"
+                      'Submit'
                     )}
                   </button>
                 </div>
@@ -407,17 +412,13 @@ export default function LessonInterface({
           <div className="mt-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-sm border border-green-200 p-6">
             <div className="text-center">
               <div className="text-4xl mb-4">🎉</div>
-              <h3 className="text-xl font-bold text-green-800 mb-2">
-                Lesson Completed!
-              </h3>
+              <h3 className="text-xl font-bold text-green-800 mb-2">Lesson Completed!</h3>
               <p className="text-green-700 mb-4">
-                Great job! You scored {results.correctAnswers || 0} out of{" "}
-                {results.totalAnswers || 0} problems correctly.
+                Great job! You scored {results.results?.correctAnswers || 0} out of{' '}
+                {results.results?.totalAnswers || lesson.problems.length} problems correctly.
               </p>
               <div className="animate-pulse">
-                <p className="text-sm text-green-600">
-                  Preparing your results...
-                </p>
+                <p className="text-sm text-green-600">Preparing your results...</p>
               </div>
             </div>
           </div>

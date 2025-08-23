@@ -1,6 +1,5 @@
 // Direct access to Vite environment variables
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 import type {
   LessonsResponse,
@@ -10,29 +9,30 @@ import type {
   SubmissionData,
   ProfileStatsResponse,
   AIHintResponse,
-} from "../types";
+} from '../types';
+
+import { handleApiResponse } from './api-utils';
 
 export const api = {
   // Lessons API
   async getLessons(userId: number = 1): Promise<LessonsResponse> {
-    const response = await fetch(`${API_BASE_URL}/lessons?userId=${userId}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/lessons`, {
+      headers: {
+        'X-User-ID': userId.toString(),
+      },
+    });
+
+    return handleApiResponse<LessonsResponse>(response);
   },
 
-  async getLessonById(
-    lessonId: number,
-    userId: number = 1
-  ): Promise<LessonDetailResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/lessons/${lessonId}?userId=${userId}`
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+  async getLessonById(lessonId: number, userId: number = 1): Promise<LessonDetailResponse> {
+    const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}`, {
+      headers: {
+        'X-User-ID': userId.toString(),
+      },
+    });
+
+    return handleApiResponse<LessonDetailResponse>(response);
   },
 
   // Update lesson progress manually
@@ -41,22 +41,16 @@ export const api = {
     problemsCompleted: number,
     userId: number = 1
   ): Promise<UpdateProgressResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/lessons/${lessonId}/progress`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-ID": userId.toString(),
-        },
-        body: JSON.stringify({ problemsCompleted }),
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/progress`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-ID': userId.toString(),
+      },
+      body: JSON.stringify({ problemsCompleted }),
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return handleApiResponse<UpdateProgressResponse>(response);
   },
 
   // Submission API
@@ -65,26 +59,20 @@ export const api = {
     submissionData: SubmissionData
   ): Promise<SubmissionResponse> {
     const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/submit`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(submissionData),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return handleApiResponse<SubmissionResponse>(response);
   },
 
   // Profile API
   async getProfileStats(userId: number = 1): Promise<ProfileStatsResponse> {
     const response = await fetch(`${API_BASE_URL}/profile/${userId}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return handleApiResponse<ProfileStatsResponse>(response);
   },
 
   // AI Hint API
@@ -95,10 +83,10 @@ export const api = {
     userId: number = 1
   ): Promise<AIHintResponse> {
     const response = await fetch(`${API_BASE_URL}/ai/hint`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        userid: userId.toString(),
+        'Content-Type': 'application/json',
+        'X-User-ID': userId.toString(),
       },
       body: JSON.stringify({
         lessonId,
@@ -107,9 +95,6 @@ export const api = {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return handleApiResponse<AIHintResponse>(response);
   },
 };
