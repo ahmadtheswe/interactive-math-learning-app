@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-23] - Authentication/Authorization Branch & Dependency Injection Fixes
+
+### Fixed
+
+- **Dependency Injection Context Issues**:
+  - Resolved "Cannot read properties of undefined (reading 'lessonService')" error in LessonHandler
+  - Fixed method context binding in Express route handlers when using tsyringe dependency injection
+  - Updated lesson routes to properly preserve `this` context using arrow function wrappers
+  - Ensured proper service injection and method binding for class-based handlers
+- **Route Handler Architecture**:
+  - Modified route definitions from direct method references to arrow function wrappers
+  - Fixed context loss issue when passing class methods as Express route callbacks
+  - Maintained proper dependency injection functionality while preserving method context
+
+### Technical Details
+
+- **Route Handler Pattern**:
+  - Changed from `router.get('/', lessonHandler.getLessons)` to `router.get('/', (req, res) => lessonHandler.getLessons(req, res))`
+  - Applied fix to all lesson routes: `getLessons`, `getLessonById`, and `updateProgress`
+  - Preserved existing static method patterns for ProfileHandler and AIHandler modules
+- **Dependency Injection System**:
+  - Confirmed proper tsyringe container registration for ILessonService interface
+  - Validated service injection and handler instantiation through container.resolve()
+  - Maintained clean separation between instance-based and static handler patterns
+
 ## [2025-08-11] - AI Hint System Frontend Integration & TypeScript Enhancements
 
 ### Added
@@ -553,7 +578,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactored server codebase to modular monolith architecture:
   - Moved all business logic and request handlers into `src/modules` by domain (profile, lesson, submission)
-  - Each module contains its own `service.ts`, `handler.ts`, and `types.ts`
+  - Each module contains its own `lesson-service.ts`, `lesson-handler.ts`, and `types.ts`
   - Updated all routes to use new handlers from modules
   - Created module index files for clean imports
 - Separated all request/response/result models into dedicated `types.ts` files per module

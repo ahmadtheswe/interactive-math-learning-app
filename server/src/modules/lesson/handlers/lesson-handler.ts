@@ -1,9 +1,17 @@
-import { Request, Response } from 'express';
-import { LessonService } from './service';
+import {Request, Response} from 'express';
+import {ILessonHandler} from "../interfaces/lesson-handler-interface";
+import {ILessonService} from "../interfaces/lesson-service-interface";
+import {inject, injectable} from "tsyringe";
 
-export class LessonHandler {
-  static async getLessons(req: Request, res: Response): Promise<void> {
+@injectable()
+export class LessonHandler implements ILessonHandler {
+
+  constructor(@inject("ILessonService") private lessonService: ILessonService) {}
+
+  async getLessons(req: Request, res: Response): Promise<void> {
     try {
+      // TODO: Use a more robust user authentication mechanism in production
+      // This is just a placeholder for demonstration purposes
       // Get userId from header, default to 1 if not provided
       const userIdHeader = req.headers['userid'] || req.headers['x-user-id'] || '1';
       const userId = parseInt(userIdHeader as string);
@@ -16,7 +24,7 @@ export class LessonHandler {
         return;
       }
 
-      const lessonsWithProgress = await LessonService.getLessonsWithProgress(userId);
+      const lessonsWithProgress = await this.lessonService.getLessonsWithProgress(userId);
 
       res.json({
         success: true,
@@ -34,7 +42,7 @@ export class LessonHandler {
     }
   }
 
-  static async getLessonById(req: Request, res: Response): Promise<void> {
+  async getLessonById(req: Request, res: Response): Promise<void> {
     try {
       const lessonId = parseInt(req.params.lessonId);
       const userIdHeader = req.headers['userid'] || req.headers['x-user-id'] || '1';
@@ -56,7 +64,7 @@ export class LessonHandler {
         return;
       }
 
-      const lesson = await LessonService.getLessonById(lessonId, userId);
+      const lesson = await this.lessonService.getLessonById(lessonId, userId);
 
       if (!lesson) {
         res.status(404).json({
@@ -79,12 +87,12 @@ export class LessonHandler {
     }
   }
 
-  static async updateProgress(req: Request, res: Response): Promise<void> {
+  async updateProgress(req: Request, res: Response): Promise<void> {
     try {
       const lessonId = parseInt(req.params.lessonId);
       const userIdHeader = req.headers['userid'] || req.headers['x-user-id'] || '1';
       const userId = parseInt(userIdHeader as string);
-      const { problemsCompleted } = req.body;
+      const {problemsCompleted} = req.body;
 
       if (isNaN(lessonId) || isNaN(userId)) {
         res.status(400).json({
@@ -102,7 +110,7 @@ export class LessonHandler {
         return;
       }
 
-      const updatedProgress = await LessonService.updateUserProgress(userId, lessonId, problemsCompleted);
+      const updatedProgress = await this.lessonService.updateUserProgress(userId, lessonId, problemsCompleted);
 
       res.json({
         success: true,

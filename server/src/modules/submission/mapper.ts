@@ -1,15 +1,14 @@
 import {
-  SubmissionResult,
-  SubmissionData,
-  UserStats,
+  ExistingSubmissionFromDatabase,
+  ProblemResult,
   ProgressStats,
   StreakCalculation,
-  ExistingSubmissionFromDatabase,
+  SubmissionData,
+  SubmissionResult,
+  SubmissionUserFromDatabase,
   SubmissionUserProgressFromDatabase,
   UpdatedUserFromDatabase,
-  SubmissionUserFromDatabase,
-  SubmissionProblemFromDatabase,
-  ProblemResult,
+  UserStats,
 } from "./types";
 
 export class SubmissionMapper {

@@ -1,15 +1,11 @@
-import { 
-  LessonWithProgress, 
-  LessonWithDetails, 
-  Problem, 
-  ProblemOption, 
-  UserProgress,
+import {
   LessonFromDatabase,
-  LessonWithProblemsFromDatabase,
-  LessonProblemFromDatabase,
-  LessonProblemOptionFromDatabase,
-  LessonUserProgressFromDatabase
-} from './types';
+  LessonProblemFromDatabase, LessonProblemOptionFromDatabase, LessonUserProgressFromDatabase,
+  LessonWithDetails, LessonWithProblemsFromDatabase,
+  LessonWithProgress,
+  Problem, ProblemOption, UserProgress
+} from "../models";
+
 
 export class LessonMapper {
   /**

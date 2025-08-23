@@ -24,7 +24,9 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "openai": "^5.12.2",
-    "prisma": "^6.13.0"
+    "prisma": "^6.13.0",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
