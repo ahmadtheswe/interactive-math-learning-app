@@ -7,8 +7,7 @@ import 'reflect-metadata';
 // Import all module containers
 import './modules/profile/container';
 import './modules/lesson/container';
-// Other modules like submission are not using dependency injection yet
-// Add other module containers here
+import './modules/submission/container';
 
 // Import the container instance to make it available
 export { container } from 'tsyringe';

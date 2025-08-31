@@ -125,14 +125,28 @@ export interface UpdateProgressResponse
 
 export interface SubmissionResponse
   extends ApiResponse<{
-    results: SubmissionResult;
+    attemptId: string;
+    results: {
+      correctAnswers: number;
+      totalAnswers: number;
+      xpAwarded: number;
+      problemResults?: ProblemResult[];
+    };
     user: {
       totalXp: number;
       currentStreak: number;
+      bestStreak: number;
     };
-    isNewStreak: boolean;
+    progress: {
+      problemsCompleted: number;
+      totalProblems: number;
+      progressPercent: number;
+      completed: boolean;
+    };
+    isResubmission: boolean;
     streakBonusXp: number;
     previousXp: number;
+    isNewStreak: boolean;
   }> {
   readonly _type?: 'SubmissionResponse';
 }

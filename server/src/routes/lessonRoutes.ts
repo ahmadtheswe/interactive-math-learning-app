@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { LessonHandler } from '../modules';
-import { SubmissionHandler } from '../modules';
 import { container } from 'tsyringe';
 
 const router = Router();
@@ -14,8 +13,5 @@ router.get('/:lessonId', (req, res) => lessonHandler.getLessonById(req, res));
 
 // PUT /api/lessons/:lessonId/progress - Update user progress for a lesson
 router.put('/:lessonId/progress', (req, res) => lessonHandler.updateProgress(req, res));
-
-// POST /api/lessons/:id/submit - Submit answers with attempt_id
-router.post('/:id/submit', SubmissionHandler.submitAnswers);
 
 export { router as lessonRoutes };

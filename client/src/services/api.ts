@@ -56,12 +56,14 @@ export const api = {
   // Submission API
   async submitAnswers(
     lessonId: number,
-    submissionData: SubmissionData
+    submissionData: SubmissionData,
+    userId: number = 1
   ): Promise<SubmissionResponse> {
-    const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/submit`, {
+    const response = await fetch(`${API_BASE_URL}/submissions/${lessonId}/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-User-ID': userId.toString(),
       },
       body: JSON.stringify(submissionData),
     });

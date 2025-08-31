@@ -106,7 +106,9 @@ export default function LessonInterface({
         answers: submissionAnswers,
       };
 
-      const response = await api.submitAnswers(lessonId, submissionData);
+      // Default user ID is 1, this would be replaced with actual user ID in a real app
+      const userId = 1;
+      const response = await api.submitAnswers(lessonId, submissionData, userId);
 
       if (response.success && response.data) {
         setResults(response.data);

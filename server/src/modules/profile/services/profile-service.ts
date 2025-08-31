@@ -2,7 +2,7 @@ import { prisma } from '../../../db';
 import { UserProfileStats, UserProfile } from '../models';
 import { IProfileService } from '../interfaces/profile-service-interface';
 import { injectable } from 'tsyringe';
-import { ProfileMapper } from '../mapper/mapper';
+import { ProfileMapper } from '../mapper/profile-mapper';
 
 @injectable()
 export class ProfileService implements IProfileService {
