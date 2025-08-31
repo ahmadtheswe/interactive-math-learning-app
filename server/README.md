@@ -183,20 +183,20 @@ The server follows a modular monolith architecture pattern, organizing code by b
 src/
 ├── modules/                 # Business domain modules
 │   ├── profile/
-│   │   ├── service.ts      # ProfileService - business logic
-│   │   ├── handler.ts      # ProfileHandler - HTTP request handling
+│   │   ├── lesson-service.ts      # ProfileService - business logic
+│   │   ├── lesson-handler.ts      # ProfileHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── lesson/
-│   │   ├── service.ts      # LessonService - business logic
-│   │   ├── handler.ts      # LessonHandler - HTTP request handling
+│   │   ├── lesson-service.ts      # LessonService - business logic
+│   │   ├── lesson-handler.ts      # LessonHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── submission/
-│   │   ├── service.ts      # SubmissionService - business logic
-│   │   ├── handler.ts      # SubmissionHandler - HTTP request handling
+│   │   ├── lesson-service.ts      # SubmissionService - business logic
+│   │   ├── lesson-handler.ts      # SubmissionHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── ai/
-│   │   ├── service.ts      # AIService - OpenAI integration & hint generation
-│   │   ├── handler.ts      # AIHandler - HTTP request handling for hints
+│   │   ├── lesson-service.ts      # AIService - OpenAI integration & hint generation
+│   │   ├── lesson-handler.ts      # AIHandler - HTTP request handling for hints
 │   │   ├── mapper.ts       # AIMapper - response formatting
 │   │   ├── types.ts        # AI-related type definitions
 │   │   └── index.ts        # Module exports
@@ -574,7 +574,7 @@ VITE_APP_NAME=Interactive Math Learning
 
    Run this after any schema changes.
 
-2. **Submission Unique Constraint Errors**  
+2. **Submission Unique Constraint Errors**
    This was fixed by changing from single `attempt_id` constraint to composite `(attempt_id, problem_id)` constraint.
 
 3. **UUID Validation Errors**

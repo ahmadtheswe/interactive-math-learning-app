@@ -15,18 +15,18 @@ datasource db {
 }
 
 model User {
-  id               Int       @id @default(autoincrement())
+  id               Int            @id @default(autoincrement())
   name             String
-  email            String?   @unique
-  totalXp          Int       @default(0) @map("total_xp")
-  currentStreak    Int       @default(0) @map("current_streak")
-  bestStreak       Int       @default(0) @map("best_streak")
-  lastActivityDate DateTime? @map("last_activity_date")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-
-  submissions Submission[]
-  progresses  UserProgress[]
+  email            String?        @unique
+  totalXp          Int            @default(0) @map("total_xp")
+  currentStreak    Int            @default(0) @map("current_streak")
+  bestStreak       Int            @default(0) @map("best_streak")
+  lastActivityDate DateTime?      @map("last_activity_date")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  passwordHash     String?        @map("password_hash")
+  submissions      Submission[]
+  progresses       UserProgress[]
 
   @@map("users")
 }
@@ -89,7 +89,6 @@ model Submission {
 
   // Ensure one submission per problem per attempt
   @@unique([attemptId, problemId])
-
   @@map("submissions")
 }
 
@@ -99,7 +98,7 @@ model UserProgress {
   lessonId          Int       @map("lesson_id")
   problemsCompleted Int       @default(0) @map("problems_completed")
   totalProblems     Int       @default(0) @map("total_problems")
-  progressPercent   Decimal   @default(0.00) @db.Decimal(5, 2) @map("progress_percent")
+  progressPercent   Decimal   @default(0.00) @map("progress_percent") @db.Decimal(5, 2)
   completed         Boolean   @default(false)
   lastAttemptAt     DateTime? @map("last_attempt_at")
 
@@ -107,6 +106,5 @@ model UserProgress {
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
-
   @@map("user_progress")
 }

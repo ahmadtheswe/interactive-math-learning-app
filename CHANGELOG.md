@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-31] - Submission Handler Dependency Injection & Import Fixes
+
+### Fixed
+
+- **Submission Handler Import Issues**:
+  - Fixed incorrect import path for ApiResponse model in SubmissionHandler
+  - Removed direct import from common module and used the re-exported model from module's index
+  - Updated import statements to maintain proper module boundaries
+  - Ensured consistent import patterns across all submission-related components
+- **Type Safety Improvements**:
+  - Enhanced type safety in submission handler with proper import resolution
+  - Fixed potential "Cannot find module" errors by using module-local imports
+  - Maintained clean dependency graph between modules
+  - Reduced coupling between modules by eliminating cross-module direct imports
+
+### Technical Details
+
+- **Modular Dependency Management**:
+  - Fixed import statement in `submission-handler.ts` to use properly exported ApiResponse from module index
+  - Updated from `import { ApiResponse } from '../../common/models/api-response.model';` to module-local import
+  - Ensured proper re-export of common models in module index files
+  - Maintained backward compatibility with existing API contracts
+
+## [2025-08-24] - API Response Standardization & Type Safety Improvements
+
+### Changed
+
+- **Client-Side API Response Handling**:
+  - Standardized API response handling with a centralized utility function
+  - Created `handleApiResponse<T>` utility in `api-utils.ts` for consistent response processing
+  - Updated all API methods to use the unified response handling approach
+  - Enhanced error handling with proper error messages from API responses
+  - Improved type safety with proper generic typing for all API responses
+- **TypeScript Interface Improvements**:
+  - Refactored response interfaces to extend common `ApiResponse<T>` interface
+  - Added type discriminators to prevent TypeScript compiler warnings
+  - Reorganized type definitions to ensure proper type inheritance
+  - Moved `ApiResponse` interface declaration before dependent types
+  - Enhanced type safety across client-server communication layer
+
+### Technical Details
+
+- **API Response Pattern**:
+  - Unified API response structure with `success`, `data`, `error`, and `message` fields
+  - Consistent error handling and data extraction across all API calls
+  - Type-safe access to API response data with proper generic typing
+- **Type System Enhancements**:
+  - Added `readonly _type?` properties to response interfaces for type discrimination
+  - Updated all API response interfaces to extend `ApiResponse<T>` for consistency
+  - Enhanced `handleApiResponse<T>` utility with proper type casting and error handling
+  - Ensured consistent typing between server-side and client-side API interfaces
+
+## [2025-08-23] - Authentication/Authorization Branch & Dependency Injection Fixes
+
+### Fixed
+
+- **Dependency Injection Context Issues**:
+  - Resolved "Cannot read properties of undefined (reading 'lessonService')" error in LessonHandler
+  - Fixed method context binding in Express route handlers when using tsyringe dependency injection
+  - Updated lesson routes to properly preserve `this` context using arrow function wrappers
+  - Ensured proper service injection and method binding for class-based handlers
+- **Route Handler Architecture**:
+  - Modified route definitions from direct method references to arrow function wrappers
+  - Fixed context loss issue when passing class methods as Express route callbacks
+  - Maintained proper dependency injection functionality while preserving method context
+
+### Technical Details
+
+- **Route Handler Pattern**:
+  - Changed from `router.get('/', lessonHandler.getLessons)` to `router.get('/', (req, res) => lessonHandler.getLessons(req, res))`
+  - Applied fix to all lesson routes: `getLessons`, `getLessonById`, and `updateProgress`
+  - Preserved existing static method patterns for ProfileHandler and AIHandler modules
+- **Dependency Injection System**:
+  - Confirmed proper tsyringe container registration for ILessonService interface
+  - Validated service injection and handler instantiation through container.resolve()
+  - Maintained clean separation between instance-based and static handler patterns
+
 ## [2025-08-11] - AI Hint System Frontend Integration & TypeScript Enhancements
 
 ### Added
@@ -553,7 +630,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactored server codebase to modular monolith architecture:
   - Moved all business logic and request handlers into `src/modules` by domain (profile, lesson, submission)
-  - Each module contains its own `service.ts`, `handler.ts`, and `types.ts`
+  - Each module contains its own `lesson-service.ts`, `lesson-handler.ts`, and `types.ts`
   - Updated all routes to use new handlers from modules
   - Created module index files for clean imports
 - Separated all request/response/result models into dedicated `types.ts` files per module
@@ -613,7 +690,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - dotenv
 
 [Unreleased]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/master...HEAD
-[2025-08-11]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-10...2025-08-11
+[2025-08-31]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-24...2025-08-31
+[2025-08-24]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-23...2025-08-24
+[2025-08-23]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-11...2025-08-23
 [2025-08-10]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-09...2025-08-10
 [2025-08-09]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-08...2025-08-09
 [2025-08-08]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-07...2025-08-08

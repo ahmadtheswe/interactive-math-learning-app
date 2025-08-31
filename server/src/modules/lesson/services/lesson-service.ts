@@ -1,25 +1,24 @@
-import { prisma } from "../../db";
-import {
-  LessonWithProgress,
-  LessonWithDetails,
-  UserProgressUpdateResult,
-} from "./types";
-import { LessonMapper } from "./mapper";
+import {prisma} from "../../../db";
+import {LessonMapper} from "../mapper/mapper";
+import {ILessonService} from "../interfaces/lesson-service-interface";
+import {injectable} from "tsyringe";
+import {LessonWithDetails, LessonWithProgress, UserProgressUpdateResult} from "../models";
 
-export class LessonService {
-  static async getLessonsWithProgress(
+@injectable()
+export class LessonService implements ILessonService {
+  async getLessonsWithProgress(
     userId: number
   ): Promise<LessonWithProgress[]> {
     try {
       // Get all lessons with their problem counts
       const lessons = await prisma.lesson.findMany({
-        orderBy: { orderIndex: "asc" },
+        orderBy: {orderIndex: "asc"},
         include: {
           problems: {
-            select: { id: true },
+            select: {id: true},
           },
           progresses: {
-            where: { userId },
+            where: {userId},
             select: {
               problemsCompleted: true,
               totalProblems: true,
@@ -38,16 +37,16 @@ export class LessonService {
     }
   }
 
-  static async getLessonById(
+  async getLessonById(
     lessonId: number,
     userId: number
   ): Promise<LessonWithDetails | null> {
     try {
       const lesson = await prisma.lesson.findUnique({
-        where: { id: lessonId },
+        where: {id: lessonId},
         include: {
           problems: {
-            orderBy: { orderIndex: "asc" },
+            orderBy: {orderIndex: "asc"},
             include: {
               options: {
                 select: {
@@ -59,7 +58,7 @@ export class LessonService {
             },
           },
           progresses: {
-            where: { userId },
+            where: {userId},
             select: {
               problemsCompleted: true,
               totalProblems: true,
@@ -82,7 +81,7 @@ export class LessonService {
     }
   }
 
-  static async updateUserProgress(
+  async updateUserProgress(
     userId: number,
     lessonId: number,
     problemsCompleted: number
@@ -90,10 +89,10 @@ export class LessonService {
     try {
       // Get total problems in the lesson
       const lesson = await prisma.lesson.findUnique({
-        where: { id: lessonId },
+        where: {id: lessonId},
         include: {
           problems: {
-            select: { id: true },
+            select: {id: true},
           },
         },
       });

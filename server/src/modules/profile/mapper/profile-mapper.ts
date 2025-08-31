@@ -1,10 +1,10 @@
-import { 
-  UserProfileStats, 
+import {
+  UserProfileStats,
   UserProfile,
   ProfileUserFromDatabase,
   UserProfileFromDatabase,
-  ProfileUserProgressFromDatabase 
-} from './types';
+  ProfileUserProgressFromDatabase,
+} from '../models';
 
 export class ProfileMapper {
   /**
@@ -16,13 +16,13 @@ export class ProfileMapper {
     totalLessons: number
   ): UserProfileStats {
     // Calculate statistics
-    const completedLessons = userProgresses.filter(progress => progress.completed).length;
-    
+    const completedLessons = userProgresses.filter((progress) => progress.completed).length;
+
     // Calculate overall progress percentage
     let overallProgressPercentage = 0;
     if (userProgresses.length > 0) {
       const totalProgress = userProgresses.reduce(
-        (sum: number, progress) => sum + Number(progress.progressPercent), 
+        (sum: number, progress) => sum + Number(progress.progressPercent),
         0
       );
       overallProgressPercentage = Math.round(totalProgress / userProgresses.length);
@@ -58,11 +58,13 @@ export class ProfileMapper {
   /**
    * Calculates overall progress percentage from user progresses
    */
-  static calculateOverallProgressPercentage(userProgresses: ProfileUserProgressFromDatabase[]): number {
+  static calculateOverallProgressPercentage(
+    userProgresses: ProfileUserProgressFromDatabase[]
+  ): number {
     if (userProgresses.length === 0) return 0;
-    
+
     const totalProgress = userProgresses.reduce(
-      (sum: number, progress) => sum + Number(progress.progressPercent), 
+      (sum: number, progress) => sum + Number(progress.progressPercent),
       0
     );
     return Math.round(totalProgress / userProgresses.length);
@@ -72,6 +74,6 @@ export class ProfileMapper {
    * Counts completed lessons from user progresses
    */
   static countCompletedLessons(userProgresses: ProfileUserProgressFromDatabase[]): number {
-    return userProgresses.filter(progress => progress.completed).length;
+    return userProgresses.filter((progress) => progress.completed).length;
   }
 }

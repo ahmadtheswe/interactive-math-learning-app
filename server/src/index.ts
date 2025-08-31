@@ -1,9 +1,14 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import { profileRoutes } from "./routes/profileRoutes";
-import { lessonRoutes } from "./routes/lessonRoutes";
-import { aiRoutes } from "./routes/aiRoutes";
+import 'reflect-metadata';
+// Import container first to ensure all dependencies are registered
+import './container';
+
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { profileRoutes } from './routes/profileRoutes';
+import { lessonRoutes } from './routes/lessonRoutes';
+import { aiRoutes } from './routes/aiRoutes';
+import { submissionRoutes } from './routes/submissionRouter';
 
 dotenv.config();
 
@@ -15,18 +20,20 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get("/api", (_req, res) => {
-  res.json({ message: "Hello from PERN + TypeScript backend!" });
+app.get('/api', (_req, res) => {
+  res.json({ message: 'Hello from PERN + TypeScript backend!' });
 });
 
 // Profile routes
-app.use("/api/profile", profileRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Lesson routes
-app.use("/api/lessons", lessonRoutes);
+app.use('/api/lessons', lessonRoutes);
 
 // AI routes
-app.use("/api/ai", aiRoutes);
+app.use('/api/ai', aiRoutes);
+
+app.use('/api/submissions', submissionRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

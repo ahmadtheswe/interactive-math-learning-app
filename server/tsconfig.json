@@ -7,7 +7,9 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "sourceMap": true
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "ts-node": {
     "compilerOptions": {
