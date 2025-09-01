@@ -713,12 +713,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - CORS
     - dotenv
 
-[Unreleased]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/master...HEAD
-[2025-09-01]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-31...2025-09-01
-[2025-08-31]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-24...2025-08-31
-[2025-08-24]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-23...2025-08-24
-[2025-08-23]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-11...2025-08-23
-[2025-08-10]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-09...2025-08-10
-[2025-08-09]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-08...2025-08-09
-[2025-08-08]: https://github.com/ahmadtheswe/interactive-math-learning-app/compare/2025-08-07...2025-08-08
-[2025-08-07]: https://github.com/ahmadtheswe/interactive-math-learning-app/releases/tag/2025-08-07
+[Unreleased]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/master...HEAD
+[2025-09-01]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-31...2025-09-01
+[2025-08-31]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-24...2025-08-31
+[2025-08-24]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-23...2025-08-24
+[2025-08-23]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-11...2025-08-23
+[2025-08-10]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-09...2025-08-10
+[2025-08-09]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-08...2025-08-09
+[2025-08-08]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/compare/2025-08-07...2025-08-08
+[2025-08-07]: https://github.com/ahmadtheswe/interactive-quiz-learning-app/releases/tag/2025-08-07

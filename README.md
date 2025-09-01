@@ -1,4 +1,4 @@
-# Interactive Math Learning App
+# Interactive Quiz Learning App
 
 A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for interactive mathematics education with gamification features.
 
@@ -61,7 +61,7 @@ A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for
 ## 📁 Project Structure
 
 ```
-interactive-math-learning-app/
+interactive-quiz-learning-app/
 ├── client/                     # React frontend
 │   ├── src/
 │   │   ├── components/         # Reusable UI components
