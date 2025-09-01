@@ -1,20 +1,24 @@
-import { OpenAI } from "openai";
-import { prisma } from "../../db";
-import { AIHintRequest, AIHintResponse, ProblemContext } from "./types";
+import { OpenAI } from 'openai';
+import { prisma } from '../../../db';
+import { AIHintResponse } from '../models/ai-hint-response.model';
+import { AIHintRequest, ProblemContext } from '../models';
+import { IAIService } from '../interfaces/ai-service.interface';
+import { injectable } from 'tsyringe';
 
-export class AIService {
-  private static openai = new OpenAI({
+@injectable()
+export class AIService implements IAIService {
+  private openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  static async generateHint(request: AIHintRequest): Promise<AIHintResponse> {
+  async generateHint(request: AIHintRequest): Promise<AIHintResponse> {
     try {
       // First, get the problem context from the database
       const problem = await this.getProblemContext(request.problemId);
       if (!problem) {
         return {
           success: false,
-          hint: "Problem not found. Please try again.",
+          hint: 'Problem not found. Please try again.',
         };
       }
 
@@ -23,16 +27,13 @@ export class AIService {
       if (isCorrect) {
         return {
           success: true,
-          hint: "Great job! Your answer is actually correct! 🎉",
+          hint: 'Great job! Your answer is actually correct! 🎉',
           problemQuestion: problem.question,
         };
       }
 
       // Generate a teen-friendly hint using OpenAI
-      const hint = await this.generateHintFromOpenAI(
-        problem,
-        request.userAnswer
-      );
+      const hint = await this.generateHintFromOpenAI(problem, request.userAnswer);
 
       return {
         success: true,
@@ -40,7 +41,7 @@ export class AIService {
         problemQuestion: problem.question,
       };
     } catch (error) {
-      console.error("Error generating hint:", error);
+      console.error('Error generating hint:', error);
       return {
         success: false,
         hint: "Sorry, I couldn't generate a hint right now. Try reviewing the problem again or ask your teacher for help!",
@@ -48,9 +49,7 @@ export class AIService {
     }
   }
 
-  private static async getProblemContext(
-    problemId: number
-  ): Promise<ProblemContext | null> {
+  private async getProblemContext(problemId: number): Promise<ProblemContext | null> {
     try {
       const problem = await prisma.problem.findUnique({
         where: { id: problemId },
@@ -73,15 +72,12 @@ export class AIService {
         options: problem.options?.map((opt) => opt.optionText),
       };
     } catch (error) {
-      console.error("Error fetching problem context:", error);
+      console.error('Error fetching problem context:', error);
       return null;
     }
   }
 
-  private static checkAnswer(
-    problem: ProblemContext,
-    userAnswer: string
-  ): boolean {
+  private checkAnswer(problem: ProblemContext, userAnswer: string): boolean {
     // Normalize answers for comparison
     const normalizedCorrect = problem.correctAnswer.trim().toLowerCase();
     const normalizedUser = userAnswer.trim().toLowerCase();
@@ -89,7 +85,7 @@ export class AIService {
     return normalizedCorrect === normalizedUser;
   }
 
-  private static async generateHintFromOpenAI(
+  private async generateHintFromOpenAI(
     problem: ProblemContext,
     userAnswer: string
   ): Promise<string> {
@@ -108,15 +104,15 @@ Guidelines:
       const userPrompt = `Problem: ${problem.question}
 Student's answer: ${userAnswer}
 Problem type: ${problem.type}
-${problem.options ? `Available options: ${problem.options.join(", ")}` : ""}
+${problem.options ? `Available options: ${problem.options.join(', ')}` : ''}
 
 The student got this wrong. Give them a helpful hint to guide them toward the correct approach without revealing the answer.`;
 
       const completion = await this.openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+        model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         max_tokens: 150,
         temperature: 0.7,
@@ -128,7 +124,7 @@ The student got this wrong. Give them a helpful hint to guide them toward the co
         "Let's think about this step by step. What's the first thing you need to do to solve this problem? 🤔"
       );
     } catch (error) {
-      console.error("OpenAI API error:", error);
+      console.error('OpenAI API error:', error);
       // Fallback hint if OpenAI fails
       return "Don't worry, everyone makes mistakes! Take another look at the problem and try breaking it down into smaller steps. You've got this! 💪";
     }

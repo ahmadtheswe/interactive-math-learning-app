@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { isValidUUID } from "../utils/uuid";
-import { api } from "../services/api";
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { isValidUUID } from '../utils/uuid';
+import { api } from '../services/api';
 
 interface ProblemResult {
   id: number;
@@ -47,7 +47,7 @@ export default function ResultsPage() {
     totalXpAwarded: 0,
     previousXp: 0,
     newXp: 0,
-    lessonTitle: "Unknown Lesson",
+    lessonTitle: 'Unknown Lesson',
     streakCount: 0,
   };
 
@@ -71,28 +71,10 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!attemptId || !isValidUUID(attemptId)) {
       // Redirect to not found page if attempt-id is missing or invalid
-      navigate("/404", { replace: true });
+      navigate('/404', { replace: true });
       return;
     }
-  }, [attemptId, navigate]);
 
-  // Don't render if validation hasn't passed yet
-  if (!attemptId || !isValidUUID(attemptId)) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Validating session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const scorePercent = Math.round(
-    (correctAnswers / Math.max(totalAnswers, 1)) * 100
-  );
-
-  useEffect(() => {
     // Start XP animation after a brief delay
     const xpTimer = setTimeout(() => {
       setShowXpAnimation(true);
@@ -122,32 +104,45 @@ export default function ResultsPage() {
       clearTimeout(xpTimer);
       clearTimeout(streakTimer);
     };
-  }, [totalXpAwarded, streakCount]);
+  }, [attemptId, navigate, totalXpAwarded, streakCount]);
+
+  // Don't render if validation hasn't passed yet
+  if (!attemptId || !isValidUUID(attemptId)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Validating session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const scorePercent = Math.round((correctAnswers / Math.max(totalAnswers, 1)) * 100);
 
   const getScoreColor = () => {
-    if (scorePercent >= 90) return "text-green-600";
-    if (scorePercent >= 70) return "text-yellow-600";
-    return "text-red-600";
+    if (scorePercent >= 90) return 'text-green-600';
+    if (scorePercent >= 70) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   const getScoreEmoji = () => {
-    if (perfectScore) return "🌟";
-    if (scorePercent >= 90) return "🎉";
-    if (scorePercent >= 70) return "👍";
-    return "💪";
+    if (perfectScore) return '🌟';
+    if (scorePercent >= 90) return '🎉';
+    if (scorePercent >= 70) return '👍';
+    return '💪';
   };
 
   const getEncouragementMessage = () => {
     if (perfectScore) return "Perfect! You're absolutely crushing it!";
-    if (scorePercent >= 90)
-      return "Excellent work! Keep up the amazing progress!";
+    if (scorePercent >= 90) return 'Excellent work! Keep up the amazing progress!';
     if (scorePercent >= 70) return "Great job! You're getting stronger!";
-    return "Good effort! Every mistake is a step towards mastery!";
+    return 'Good effort! Every mistake is a step towards mastery!';
   };
 
   const handleGetHint = async (problemId: number, userAnswer: string) => {
     if (!lessonId) {
-      alert("Unable to get hint: lesson information is missing.");
+      alert('Unable to get hint: lesson information is missing.');
       return;
     }
 
@@ -156,8 +151,10 @@ export default function ResultsPage() {
     try {
       const response = await api.getHint(lessonId, problemId, userAnswer);
 
-      if (response.success) {
-        setHints((prev) => ({ ...prev, [problemId]: response.data.hint }));
+      // Using optional chaining for type safety
+      const hintText = response?.data?.hint;
+      if (hintText) {
+        setHints((prev) => ({ ...prev, [problemId]: hintText }));
       } else {
         setHints((prev) => ({
           ...prev,
@@ -166,11 +163,10 @@ export default function ResultsPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching hint:", error);
+      console.error('Error fetching hint:', error);
       setHints((prev) => ({
         ...prev,
-        [problemId]:
-          "Sorry, there was an error getting your hint. Please try again later.",
+        [problemId]: 'Sorry, there was an error getting your hint. Please try again later.',
       }));
     } finally {
       setLoadingHints((prev) => ({ ...prev, [problemId]: false }));
@@ -183,9 +179,7 @@ export default function ResultsPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4 animate-pulse">{getScoreEmoji()}</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Lesson Complete!
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Lesson Complete!</h1>
           <p className="text-xl text-gray-600">{lessonTitle}</p>
         </div>
 
@@ -195,9 +189,7 @@ export default function ResultsPage() {
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12 text-white text-center">
             <div className="mb-6">
               <div
-                className={`text-8xl font-bold mb-2 ${
-                  scorePercent >= 70 ? "animate-bounce" : ""
-                }`}
+                className={`text-8xl font-bold mb-2 ${scorePercent >= 70 ? 'animate-bounce' : ''}`}
               >
                 {scorePercent}%
               </div>
@@ -214,23 +206,17 @@ export default function ResultsPage() {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
                 <span className="text-2xl">⚡</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                XP Gained
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">XP Gained</h2>
 
               {/* XP Animation */}
               <div
                 className={`transition-all duration-1000 ${
-                  showXpAnimation ? "scale-110" : "scale-100"
+                  showXpAnimation ? 'scale-110' : 'scale-100'
                 }`}
               >
-                <div className="text-6xl font-bold text-yellow-600 mb-2">
-                  +{animatedXp}
-                </div>
+                <div className="text-6xl font-bold text-yellow-600 mb-2">+{animatedXp}</div>
                 {streakBonusXp > 0 && (
-                  <div className="text-lg text-yellow-500">
-                    (+{streakBonusXp} streak bonus!)
-                  </div>
+                  <div className="text-lg text-yellow-500">(+{streakBonusXp} streak bonus!)</div>
                 )}
               </div>
 
@@ -260,7 +246,7 @@ export default function ResultsPage() {
         {streakCount > 0 && (
           <div
             className={`bg-white rounded-2xl shadow-lg p-8 mb-8 transition-all duration-1000 ${
-              showStreakAnimation ? "scale-105 ring-4 ring-orange-200" : ""
+              showStreakAnimation ? 'scale-105 ring-4 ring-orange-200' : ''
             }`}
           >
             <div className="text-center">
@@ -268,15 +254,15 @@ export default function ResultsPage() {
                 <span className="text-2xl">🔥</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {isNewStreak ? "New Streak Started!" : "Streak Continues!"}
+                {isNewStreak ? 'New Streak Started!' : 'Streak Continues!'}
               </h3>
               <div className="text-4xl font-bold text-orange-600 mb-2">
-                {streakCount} {streakCount === 1 ? "Day" : "Days"}
+                {streakCount} {streakCount === 1 ? 'Day' : 'Days'}
               </div>
               <p className="text-gray-600">
                 {isNewStreak
-                  ? "Great start! Keep learning daily to build your streak!"
-                  : "Amazing consistency! Keep the momentum going!"}
+                  ? 'Great start! Keep learning daily to build your streak!'
+                  : 'Amazing consistency! Keep the momentum going!'}
               </p>
             </div>
           </div>
@@ -286,9 +272,7 @@ export default function ResultsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Performance Breakdown */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Performance
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Correct Answers</span>
@@ -309,18 +293,14 @@ export default function ResultsPage() {
 
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Accuracy</span>
-                <span className={`font-bold text-lg ${getScoreColor()}`}>
-                  {scorePercent}%
-                </span>
+                <span className={`font-bold text-lg ${getScoreColor()}`}>{scorePercent}%</span>
               </div>
 
               {perfectScore && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                   <div className="flex items-center">
                     <span className="text-yellow-600 mr-2">🏆</span>
-                    <span className="text-yellow-800 font-medium">
-                      Perfect Score!
-                    </span>
+                    <span className="text-yellow-800 font-medium">Perfect Score!</span>
                   </div>
                 </div>
               )}
@@ -334,27 +314,21 @@ export default function ResultsPage() {
               <div className="flex items-center">
                 <span className="text-blue-600 mr-2">📈</span>
                 <span className="text-gray-600">XP Earned: </span>
-                <span className="font-bold text-blue-600 ml-auto">
-                  +{totalXpAwarded}
-                </span>
+                <span className="font-bold text-blue-600 ml-auto">+{totalXpAwarded}</span>
               </div>
 
               {streakCount > 0 && (
                 <div className="flex items-center">
                   <span className="text-orange-600 mr-2">🔥</span>
                   <span className="text-gray-600">Daily Streak: </span>
-                  <span className="font-bold text-orange-600 ml-auto">
-                    {streakCount} days
-                  </span>
+                  <span className="font-bold text-orange-600 ml-auto">{streakCount} days</span>
                 </div>
               )}
 
               <div className="flex items-center">
                 <span className="text-purple-600 mr-2">⭐</span>
                 <span className="text-gray-600">Total XP: </span>
-                <span className="font-bold text-purple-600 ml-auto">
-                  {newXp}
-                </span>
+                <span className="font-bold text-purple-600 ml-auto">{newXp}</span>
               </div>
             </div>
           </div>
@@ -373,47 +347,37 @@ export default function ResultsPage() {
                 <div
                   key={result.id}
                   className={`border rounded-lg p-4 ${
-                    result.isCorrect
-                      ? "border-green-200 bg-green-50"
-                      : "border-red-200 bg-red-50"
+                    result.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center">
-                      <span className="font-medium text-gray-700 mr-2">
-                        Problem {index + 1}:
-                      </span>
+                      <span className="font-medium text-gray-700 mr-2">Problem {index + 1}:</span>
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           result.isCorrect
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {result.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                        {result.isCorrect ? '✓ Correct' : '✗ Incorrect'}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {result.xpValue} XP
-                    </span>
+                    <span className="text-sm text-gray-500">{result.xpValue} XP</span>
                   </div>
 
                   <div className="mb-3">
-                    <p className="text-gray-800 font-medium mb-2">
-                      {result.question}
-                    </p>
+                    <p className="text-gray-800 font-medium mb-2">{result.question}</p>
                   </div>
 
                   <div className="mb-3">
                     <div>
-                      <span className="text-sm font-medium text-gray-600">
-                        Your Answer:
-                      </span>
+                      <span className="text-sm font-medium text-gray-600">Your Answer:</span>
                       <p
                         className={`mt-1 p-2 rounded text-sm ${
                           result.isCorrect
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                         }`}
                       >
                         {result.userAnswer}
@@ -425,12 +389,8 @@ export default function ResultsPage() {
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <div className="space-y-3">
                         <button
-                          onClick={() =>
-                            handleGetHint(result.id, result.userAnswer)
-                          }
-                          disabled={
-                            loadingHints[result.id] || !!hints[result.id]
-                          }
+                          onClick={() => handleGetHint(result.id, result.userAnswer)}
+                          disabled={loadingHints[result.id] || !!hints[result.id]}
                           className="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <span className="text-base mr-1">💡</span>
@@ -440,18 +400,16 @@ export default function ResultsPage() {
                               Getting Hint...
                             </>
                           ) : hints[result.id] ? (
-                            "Hint Generated"
+                            'Hint Generated'
                           ) : (
-                            "Get Hint"
+                            'Get Hint'
                           )}
                         </button>
 
                         {hints[result.id] && (
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
                             <div className="flex items-start">
-                              <span className="text-blue-600 mr-2 flex-shrink-0">
-                                💡
-                              </span>
+                              <span className="text-blue-600 mr-2 flex-shrink-0">💡</span>
                               <div className="text-blue-800 text-sm">
                                 <p className="font-medium mb-1">Hint:</p>
                                 <p>{hints[result.id]}</p>
@@ -471,9 +429,7 @@ export default function ResultsPage() {
         {/* Improvement Suggestions */}
         {improvements.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              💡 Areas for Improvement
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">💡 Areas for Improvement</h3>
             <ul className="space-y-2">
               {improvements.map((improvement, index) => (
                 <li key={index} className="flex items-start">
@@ -488,14 +444,14 @@ export default function ResultsPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105"
           >
             Continue Learning
           </button>
 
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate('/profile')}
             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105"
           >
             View Profile

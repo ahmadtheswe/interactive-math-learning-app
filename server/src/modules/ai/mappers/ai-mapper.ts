@@ -1,11 +1,7 @@
-import { AIHintResponse } from "./types";
+import { AIHintResponse } from '../models/ai-hint-response.model';
 
 export class AIMapper {
-  static toHintResponse(
-    hint: string,
-    success: boolean,
-    problemQuestion?: string
-  ): AIHintResponse {
+  static toHintResponse(hint: string, success: boolean, problemQuestion?: string): AIHintResponse {
     return {
       success,
       hint,
