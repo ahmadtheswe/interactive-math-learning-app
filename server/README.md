@@ -1,8 +1,23 @@
-# Interactive Math Learning App - Server
+# Interactive Math ## 🗄️ Database Setup and Migrationearning App - Server
 
 The Express.js backend server for the Interactive Math Learning App, built with TypeScript and Prisma ORM.
 
-## 🗄️ Database Setup and Migration
+## 📢 Latest Updates (September 2025)eractive Math Learning App - Server
+
+The Express.js backend server for the Interactive Math Learning App, built with TypeScript and Prisma ORM.
+
+## � Latest Updates (September 2025)
+
+- **Modular Architecture**: Refactored to a fully modular monolith architecture with separate modules for profile, lesson, submission, and AI features
+- **AI Hint System**: Implemented advanced OpenAI-powered hint generation with teen-friendly language
+- **Dependency Injection**: Added tsyringe for improved dependency management and testability
+- **Type Safety**: Enhanced TypeScript types throughout all modules
+- **Composite Keys**: Fixed duplicate submission issues with composite keys on attempt_id and problem_id
+- **Performance Optimization**: Added database indexes for faster querying of lesson and submission data
+- **Error Handling**: Improved error handling across all modules with standardized ApiResponse format
+- **Documentation**: Comprehensive documentation for all modules and API endpoints
+
+## �🗄️ Database Setup and Migration
 
 This section covers how to set up your database using Prisma. Make sure your database is running before executing these commands.
 
@@ -40,29 +55,7 @@ This command is crucial as it:
 
 If you see errors about missing `PrismaClient`, run this command to fix them.
 
-Note: Make sure your database is running before executing these commands.gration
-
-This section covers how to set up your database using Prisma. Make sure your database is running before executing these commands.
-
-### Initial Setup and Migration
-
-1. Generate the migration files:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-2. Apply the migration to the database:
-
-```bash
-npx prisma migrate deploy
-```
-
-3. Generate Prisma Client:
-
-```bash
-npx prisma generate
-```
+Note: Make sure your database is running before executing these commands.
 
 ### Prisma Studio
 
@@ -165,12 +158,29 @@ This combines reset + seed to give you a clean database with fresh lesson data a
 ### Available Scripts
 
 ```bash
-npm run dev        # Start development server with hot reload
-npm run build      # Compile TypeScript to JavaScript
-npm run start      # Run compiled server
+# Development
+npm run dev        # Start development server with hot reload using ts-node-dev
+npm run lint       # Run ESLint to check code quality
+npm run lint:fix   # Fix ESLint issues automatically
+npm run format     # Format code with Prettier
+
+# Database
 npm run seed       # Populate database with test data
 npm run db:reset   # Clear database and reset user stats
 npm run db:fresh   # Reset + seed (complete refresh)
+npm run prisma:generate # Generate Prisma client from schema
+npm run prisma:migrate  # Run pending migrations
+npm run prisma:studio   # Open Prisma Studio GUI
+
+# Production
+npm run build      # Compile TypeScript to JavaScript
+npm run start      # Run compiled server in production mode
+npm run clean      # Remove build artifacts
+
+# Testing
+npm run test       # Run unit tests with Jest
+npm run test:watch # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
 ```
 
 ## Architecture
@@ -183,16 +193,16 @@ The server follows a modular monolith architecture pattern, organizing code by b
 src/
 ├── modules/                 # Business domain modules
 │   ├── profile/
-│   │   ├── lesson-service.ts      # ProfileService - business logic
-│   │   ├── lesson-handler.ts      # ProfileHandler - HTTP request handling
+│   │   ├── profile-service.ts      # ProfileService - business logic
+│   │   ├── profile-handler.ts      # ProfileHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── lesson/
 │   │   ├── lesson-service.ts      # LessonService - business logic
 │   │   ├── lesson-handler.ts      # LessonHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── submission/
-│   │   ├── lesson-service.ts      # SubmissionService - business logic
-│   │   ├── lesson-handler.ts      # SubmissionHandler - HTTP request handling
+│   │   ├── submission-service.ts      # SubmissionService - business logic
+│   │   ├── submission-handler.ts      # SubmissionHandler - HTTP request handling
 │   │   └── index.ts        # Module exports
 │   ├── ai/
 │   │   ├── lesson-service.ts      # AIService - OpenAI integration & hint generation
@@ -217,6 +227,51 @@ src/
 3. **Modular Organization**: Related functionality is grouped together
 4. **Clean Imports**: Index files provide clean module exports
 5. **Scalability**: New modules can be added without affecting existing ones
+
+### Dependency Injection System
+
+The application uses TSyringe for dependency injection, which provides:
+
+1. **Testability**: Easy mocking of dependencies for unit tests
+2. **Loose Coupling**: Modules don't directly depend on concrete implementations
+3. **Maintainability**: Dependencies are declared explicitly at injection points
+4. **Configuration**: Module-specific containers for service registration
+
+**Container Setup** (`src/container.ts`):
+
+```typescript
+import { container } from "tsyringe";
+import { PrismaClient } from "@prisma/client";
+import * as modules from "./modules";
+
+// Register global database client
+container.registerInstance("PrismaClient", new PrismaClient());
+
+// Register module-specific containers
+modules.registerContainers(container);
+
+export { container };
+```
+
+**Module Registration** (example for submission module):
+
+```typescript
+// src/modules/submission/container.ts
+import { DependencyContainer } from "tsyringe";
+import { SubmissionService } from "./submission-service";
+import { SubmissionHandlerInterface } from "./interfaces/submission-handler-interface";
+import { SubmissionHandler } from "./handlers/submission-handler";
+
+export function register(container: DependencyContainer): void {
+  container.register("SubmissionService", {
+    useClass: SubmissionService,
+  });
+
+  container.register<SubmissionHandlerInterface>("SubmissionHandler", {
+    useClass: SubmissionHandler,
+  });
+}
+```
 
 ### API Endpoints
 
@@ -596,7 +651,7 @@ VITE_APP_NAME=Interactive Math Learning
 
 4. **Database Connection Issues**
 
-   - Ensure PostgreSQL is running on port 5400
+   - Ensure PostgreSQL is running on port 5432
    - Check `.env` file has correct `DATABASE_URL`
    - Verify database exists and is accessible
 
@@ -619,11 +674,23 @@ VITE_APP_NAME=Interactive Math Learning
 
    **Backend (.env in server folder)**:
 
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/math_learning"
-   OPENAI_API_KEY="sk-proj-your-actual-openai-key-here"
-   PORT=3000
-   ```
+```env
+# Database connection
+DATABASE_URL="postgresql://username:password@localhost:5432/math_learning"
+
+# Server configuration
+PORT=3000
+NODE_ENV=development
+
+# OpenAI configuration
+OPENAI_API_KEY="sk-proj-your-actual-openai-key-here"
+OPENAI_MODEL="gpt-3.5-turbo"  # Optional, defaults to gpt-3.5-turbo
+
+# Security options
+JWT_SECRET="your-jwt-secret-key"
+SESSION_SECRET="your-session-secret"
+CORS_ORIGIN="http://localhost:5173"  # Your frontend URL
+```
 
 7. **Attempt ID Session Issues**
 
@@ -677,126 +744,30 @@ VITE_APP_NAME=Interactive Math Learning
    DATABASE_URL="postgresql://username:password@localhost:5432/database"
    ```
 
-### Database Schema
+## 🔄 Recent Refactoring and Improvements
 
-The database schema has been updated to include the following models:
+### AI Module Enhancements
 
-- **User**: Represents a user in the system.
-- **Lesson**: Represents a lesson containing multiple problems.
-- **Problem**: Represents a problem within a lesson, which can have multiple options.
-- **ProblemOption**: Represents an option for a problem, indicating whether it is correct or not.
-- **Submission**: Represents a user's submission for a problem.
-- **UserProgress**: Represents the progress of a user in a lesson.
+The AI module has been refactored for better maintainability and type safety:
 
-This is the sql migration script that will be generated by Prisma:
+- **Structured Response Format**: Added dedicated AIHintResponse model for type-safe responses
+- **Improved Error Handling**: Comprehensive error handling with fallback hints
+- **Module-Local Imports**: Fixed cross-module dependencies by using local imports
+- **Enhanced Prompt Engineering**: Improved teen-friendly language instructions
+- **Response Normalization**: Standardized response format for consistency
 
-```sql
--- ==============================
--- 1. USERS
--- ==============================
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE,
-    total_xp INT DEFAULT 0,
-    current_streak INT DEFAULT 0,
-    best_streak INT DEFAULT 0,
-    last_activity_date DATE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+### Dependency Injection Improvements
 
--- ==============================
--- 2. LESSONS
--- ==============================
-CREATE TABLE lessons (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    description TEXT,
-    order_index INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
-);
+- **Proper Registration**: Fixed handler registration in container
+- **Interface-based Injection**: All handlers now implement interfaces for testing
+- **Scoped Services**: Services are properly scoped to their modules
+- **Clean API Boundaries**: Modules expose only necessary interfaces
 
--- ==============================
--- 3. PROBLEMS
--- ==============================
-CREATE TABLE problems (
-    id SERIAL PRIMARY KEY,
-    lesson_id INT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL, -- e.g. multiple_choice, input
-    question TEXT NOT NULL,
-    correct_answer TEXT NOT NULL, -- never sent to frontend
-    xp_value INT DEFAULT 10,
-    order_index INT DEFAULT 0
-);
+### Performance Optimizations
 
-CREATE INDEX idx_problems_lesson ON problems(lesson_id);
+- **Database Indexing**: Added strategic indexes for common query patterns
+- **Composite Keys**: Implemented composite key constraints to prevent duplicate data
+- **Query Optimization**: Refactored queries for better performance
+- **Response Caching**: Added caching for frequently accessed data
 
--- ==============================
--- 4. PROBLEM OPTIONS
--- ==============================
-CREATE TABLE problem_options (
-    id SERIAL PRIMARY KEY,
-    problem_id INT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
-    option_text TEXT NOT NULL,
-    is_correct BOOLEAN DEFAULT FALSE
-);
-
-CREATE INDEX idx_problem_options_problem ON problem_options(problem_id);
-
--- ==============================
--- 5. SUBMISSIONS
--- ==============================
-CREATE TABLE submissions (
-    id SERIAL PRIMARY KEY,
-    attempt_id VARCHAR(255) NOT NULL, -- UUID v4 format required
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    lesson_id INT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-    problem_id INT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
-    user_answer TEXT NOT NULL,
-    is_correct BOOLEAN NOT NULL,
-    xp_awarded INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Composite unique constraint: one submission per problem per attempt
--- This allows multiple problems per UUID attempt but prevents duplicates
-CREATE UNIQUE INDEX idx_submissions_attempt_problem
-ON submissions(attempt_id, problem_id);
-
--- Index for performance on attempt-based queries
-CREATE INDEX idx_submissions_attempt_id ON submissions(attempt_id);
-
--- ==============================
--- 6. USER PROGRESS
--- ==============================
-CREATE TABLE user_progress (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    lesson_id INT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-    problems_completed INT DEFAULT 0,
-    total_problems INT DEFAULT 0,
-    progress_percent NUMERIC(5,2) DEFAULT 0.00,
-    completed BOOLEAN DEFAULT FALSE,
-    last_attempt_at TIMESTAMP
-);
-
-CREATE UNIQUE INDEX idx_user_progress_user_lesson
-ON user_progress(user_id, lesson_id);
-
--- ==============================
--- 7. TRIGGERS & UPDATED_AT HANDLING (optional)
--- ==============================
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER set_updated_at
-BEFORE UPDATE ON users
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-```
+For more details on these improvements, check the source code comments in each module.

@@ -2,6 +2,16 @@
 
 The React frontend for the Interactive Math Learning App, built with TypeScript and Vite for an optimal development experience.
 
+## 📢 Latest Updates (September 2025)
+
+- **Enhanced Type Safety**: Improved TypeScript interfaces for API responses
+- **AI Hint Integration**: Fixed hint response handling with proper optional chaining
+- **Results Page Improvements**: Fixed conditional useEffect and state handling
+- **Performance Optimizations**: Reduced unnecessary re-renders
+- **Error Handling**: Added comprehensive error boundaries for API failures
+- **Environment Variables**: Enhanced validation with fallback values
+- **Mobile Responsiveness**: Improved layout for smaller screens
+
 ## 🏗️ Architecture Overview
 
 This frontend implements a sophisticated **data bridge pattern** that orchestrates data flow between components for seamless user experience.
@@ -166,7 +176,15 @@ Receives data via navigation state and presents:
 - **Performance Celebrations**: Dynamic emojis and colors based on scores
 - **Streak Tracking**: Visual streak status with bonus indicators
 - **Progress Analytics**: Detailed breakdown of lesson performance
-- **AI Hint Integration**: Interactive hint buttons with loading states and visual feedback
+- **AI Hint Integration**: Interactive hint buttons with loading states and safe response handling
+
+**Recent Improvements:**
+
+- **Fixed Conditional useEffect**: Properly handles state-dependent effects
+- **Type-Safe AI Responses**: Added proper optional chaining for hint responses
+- **Score Calculation**: Fixed percentage calculation and display
+- **Error Handling**: Added fallback states for missing or invalid data
+- **Performance**: Reduced unnecessary re-renders with memoization
 
 ### LessonPage.tsx - Interactive Problem Solving 📚
 
@@ -222,16 +240,48 @@ When implementing new features that require data flow between pages:
 3. **Navigate with State**: Pass transformed data via React Router navigation state
 4. **Display Results**: Access data in the destination component via `useLocation`
 
-### State Management
+### Error Handling Best Practices
+
+Always follow these patterns for robust error handling:
 
 ```typescript
-// In LessonInterface.tsx (Bridge)
-const navigate = useNavigate();
-navigate("/results", { state: transformedData });
+// 1. Use try/catch blocks for all API calls
+try {
+  const response = await api.someEndpoint();
+  // Handle success
+} catch (error) {
+  // Handle error
+}
 
-// In ResultsPage.tsx (Destination)
-const location = useLocation();
-const resultsData = location.state?.resultsData;
+// 2. Use optional chaining for nested data
+const data = response?.data?.someProperty;
+
+// 3. Provide fallback values
+const value = data?.value ?? defaultValue;
+
+// 4. Show user-friendly error messages
+setErrorMessage(error.message || "Something went wrong. Please try again.");
+```
+
+### Performance Optimization
+
+1. **Memoize expensive calculations and components**:
+
+```typescript
+// Use useMemo for expensive calculations
+const sortedData = useMemo(() => sortData(data), [data]);
+
+// Use React.memo for components that don't need to re-render often
+const MemoizedComponent = React.memo(SomeComponent);
+```
+
+2. **Use proper dependency arrays in useEffect**:
+
+```typescript
+// Only run when specific values change
+useEffect(() => {
+  // Effect code
+}, [dependency1, dependency2]);
 ```
 
 ## 📊 API Integration
@@ -242,6 +292,37 @@ The frontend communicates with the backend through:
 - **Centralized API client** in `services/api.ts` with full TypeScript type safety
 - **Type-safe interfaces** defined in `types/index.ts` (eliminated all `any` types)
 - **OpenAI Integration** for AI-powered hint generation
+
+### Type-Safe API Response Handling
+
+```typescript
+// Type definitions for API responses
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+interface AIHintResponse {
+  hint: string;
+  problemQuestion: string;
+}
+
+// Safe response handling with optional chaining
+const handleGetHint = async (problemId: number) => {
+  try {
+    const response = await api.getHint(lessonId, problemId, userAnswer);
+    const hintText = response?.data?.hint;
+
+    if (hintText) {
+      setHints((prev) => ({ ...prev, [problemId]: hintText }));
+    }
+  } catch (error) {
+    setErrorMessage("Unable to get hint. Please try again.");
+  }
+};
+```
 
 ## 🎨 Styling & UI
 

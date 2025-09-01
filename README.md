@@ -2,6 +2,17 @@
 
 A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for interactive mathematics education with gamification features.
 
+## 📢 Latest Updates (September 2025)
+
+- **Modular Monolith Architecture**: Refactored backend to domain-driven modular design
+- **Dependency Injection**: Added TSyringe for improved dependency management and testability
+- **Type Safety Enhancements**: Improved TypeScript interfaces across all components
+- **AI Hint System Optimizations**: Enhanced teen-friendly hint generation
+- **Submission System Fixes**: Implemented composite keys to prevent duplicate submissions
+- **Database Indexing**: Added performance indexes for faster query times
+- **Environment Configuration**: Enhanced validation with fallback values
+- **Results Page Fixes**: Fixed AI hint response handling and UI improvements
+
 ## 🚀 Features
 
 ### Core Functionality
@@ -33,11 +44,13 @@ A comprehensive PERN (PostgreSQL, Express, React, Node.js) stack application for
 ### Backend (Node.js + Express)
 
 - **Express.js** server with TypeScript
-- **Modular Architecture** with domain-based organization (AI, Profile, Lessons, Submissions)
+- **Modular Monolith Architecture** with domain-based organization
+- **Dependency Injection** with TSyringe for loose coupling and testability
 - **Prisma ORM** with PostgreSQL database
-- **AI Integration** with OpenAI GPT-3.5-turbo for intelligent hint generation
-- **Global database configuration** with optimized transaction timeouts
+- **OpenAI Integration** with GPT-3.5-turbo for intelligent hint generation
+- **Type-Safe API Responses** with standardized ApiResponse format
 - **RESTful API** design with comprehensive error handling
+- **Indexed Database** with optimized query performance
 
 ### Database (PostgreSQL)
 
@@ -65,11 +78,16 @@ interactive-math-learning-app/
 │   ├── src/
 │   │   ├── modules/           # Business domain modules
 │   │   │   ├── ai/                # AI hint system with OpenAI integration
+│   │   │   │   ├── handlers/          # HTTP request handlers
+│   │   │   │   ├── interfaces/        # TypeScript interfaces
+│   │   │   │   ├── models/            # Response models
+│   │   │   │   └── services/          # Business logic services
 │   │   │   ├── profile/           # User profile and statistics
-│   │   │   ├── lessons/           # Lesson management
-│   │   │   └── submissions/       # Answer submission and grading
+│   │   │   ├── lesson/            # Lesson management
+│   │   │   └── submission/        # Answer submission and grading
 │   │   ├── routes/            # API route definitions
-│   │   ├── db.ts              # Global Prisma client configuration
+│   │   ├── container.ts       # TSyringe dependency container
+│   │   ├── db.ts              # Prisma client configuration
 │   │   └── index.ts           # Server entry point
 │   ├── package.json
 │   └── tsconfig.json
@@ -102,8 +120,25 @@ interactive-math-learning-app/
 
    ```bash
    cp env.example .env
-   # Edit .env with your database and OpenAI API configuration
-   # Required: DATABASE_URL, OPENAI_API_KEY
+   ```
+
+   Required backend environment variables (.env in server directory):
+
+   ```env
+   # Database connection
+   DATABASE_URL="postgresql://username:password@localhost:5432/math_learning"
+
+   # Server configuration
+   PORT=3000
+   NODE_ENV=development
+
+   # OpenAI configuration
+   OPENAI_API_KEY="your-openai-api-key"
+   OPENAI_MODEL="gpt-3.5-turbo"
+
+   # Security (if using authentication)
+   JWT_SECRET="your-secret-key"
+   CORS_ORIGIN="http://localhost:5173"
    ```
 
 4. Run database migrations:
@@ -156,9 +191,18 @@ interactive-math-learning-app/
 
 ## 🧮 Technical Highlights
 
+### Modular Monolith Architecture
+
+The backend follows a domain-driven modular monolith approach:
+
+- **Module Independence**: Each module (profile, lesson, submission, ai) is self-contained
+- **Dependency Injection**: TSyringe provides loose coupling between modules
+- **Clean Interfaces**: Every module exposes defined interfaces for type safety
+- **Standard Response Format**: Consistent ApiResponse pattern across all endpoints
+
 ### Data Bridge Architecture
 
-The application uses a sophisticated data bridge pattern:
+The frontend uses a sophisticated data bridge pattern:
 
 - **LessonPage.tsx**: Presents lesson content and collects user responses
 - **LessonInterface.tsx**: Acts as data orchestrator, handling API calls and navigation
@@ -166,15 +210,10 @@ The application uses a sophisticated data bridge pattern:
 
 ### Database Optimizations
 
-- **Global Prisma Client**: Centralized database configuration with connection pooling
-- **Transaction Timeouts**: Extended to 15 seconds for complex operations
+- **Indexed Queries**: Strategic indexes on frequently queried columns
+- **Composite Keys**: Prevent duplicate submissions with attempt_id + problem_id constraints
+- **Transaction Management**: Controlled transaction scope for data integrity
 - **Streak Calculations**: Automated daily streak tracking with bonus multipliers
-
-### Performance Features
-
-- **Animated Feedback**: Smooth XP counter animations and progress reveals
-- **Optimistic Updates**: Immediate UI feedback with server synchronization
-- **Error Handling**: Comprehensive error boundaries and fallback states
 
 ## 🔧 Development
 
